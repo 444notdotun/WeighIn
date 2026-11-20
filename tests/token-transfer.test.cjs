@@ -1,15 +1,21 @@
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const { Address, Asset, Keypair, nativeToScVal } = require('@stellar/stellar-sdk');
-const { bindAsset, transferFixture } = require('./experiments/token-transfer-cases.cjs');
+const { bindAsset, policy, transferFixture } = require('./experiments/token-transfer-cases.cjs');
 const { FixturesSpecSchema } = require('../dist/config');
 const { toScVal } = require('../dist/measurement');
+const { loadConfigContent } = require('../dist/threshold');
 
 const network = 'Standalone Network ; February 2017';
 const account = byte => Keypair.fromRawEd25519Seed(Buffer.alloc(32, byte)).publicKey();
 const asset = new Asset('WEIGHIN', account(1)).contractId(network);
 const address = Address.fromString(asset).toScVal();
 const receipt = { status: 'SUCCESS', ledger: 42, returnValue: address };
+
+test('transfer policy applies strict CPU tolerance to the measured function', () => {
+  assert.equal(loadConfigContent(policy, 'policy.toml').thresholds.functions.transfer.cpu_instructions,
+    'strict_zero_tolerance');
+});
 
 test('committed standard asset address and exact i128 amount reach the transfer fixture', () => {
   const bound = bindAsset(receipt, asset);

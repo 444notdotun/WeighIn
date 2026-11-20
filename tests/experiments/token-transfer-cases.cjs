@@ -39,7 +39,7 @@ function transferFixture(wasm, asset, sender, recipient, amount) {
   };
 }
 
-const policy = '[thresholds.functions.transfer]\ncpu_instructions = "0%"\n';
+const policy = '[thresholds.functions.transfer]\ncpu_instructions = "strict_zero_tolerance"\n';
 
 function compare(base, head) {
   const diff = diffBenchmarks(base, head);
