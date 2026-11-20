@@ -45,6 +45,24 @@ receipt-bound asset address. The scenario covers this transfer and its
 required ledger state. External escrow and upstream adoption remain outside
 its scope.
 
+## Recorded result
+
+The [Linux evidence archive](experiments/token-transfer/) is from the
+[hosted protocol-28 run](https://github.com/WeighInNG/WeighIn/actions/runs/44759119903)
+of PR head `cf56ba0`, tested at merge checkout `e21a6343`.
+
+| Measurement | BASE CPU instructions | HEAD CPU instructions | Outcome |
+| --- | ---: | ---: | --- |
+| Direct control | 515,754 | 515,754 | Policy passed |
+| Direct regression | 515,754 | 1,327,348 | CPU rule rejected |
+| Bundled Action control | 514,804 | 514,804 | Exit 0 |
+| Bundled Action regression | 514,804 | 1,327,348 | Exit 1 |
+
+Both trustlines were in the native write footprint and the replay emitted
+the token transfer event. The overdraw returned contract error `#10`. The
+unfunded source account was rejected during account lookup. The signed
+transaction committed the expected 97.5 and 12.5 WEIGHIN balances.
+
 ```sh
 npm ci
 npm run build
