@@ -133,6 +133,7 @@ Measurement and helper operations accept an optional `signal?: AbortSignal` acro
 - **Simulation and transient recovery**: `measureInvocation` aborts transient captive-core retry delays immediately upon cancellation and halts retry loops.
 - **Resource protection**: Caller-provided key files (`keyFile`) are never created, modified or deleted by the API, whether a run succeeds, fails or is cancelled. When no `keyFile` is given, the API creates a private temporary directory for the deployer key and removes it when the run finishes, fails or is cancelled, so each such run uses a fresh deployer account. Scratch files are cleaned up.
 - **Fail-closed guarantees**: Cancelled measurements throw explicit cancellation errors (`AbortError`) and never produce synthetic zero or fallback benchmarks.
+- **Action cancellation scope**: `src/cancellation.ts` handles `SIGTERM`/`SIGINT` for the Action by aborting the measurement signal, terminating tracked child processes (git, Stellar/Cargo builds, custom build commands, native helper) with `SIGTERM` then `SIGKILL`, and only afterward removing owned temporary paths. Owned paths are limited to fresh `weighin-` `mkdtemp` directories directly under the OS temporary root: the BASE worktree, the Action-owned deployer key directory and build scratch directories. The caller's HEAD checkout, caller-supplied `keyFile`, report and metadata outputs are never registered for cleanup. A cancelled run sets a nonzero exit code and reports failure; no passing benchmark or policy result is published.
 
 ## Schema migration
 

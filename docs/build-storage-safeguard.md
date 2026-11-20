@@ -60,7 +60,7 @@ are unchanged between each BASE/HEAD pair.
 Five new behavior tests prove environment preservation and directory isolation for
 two builds; pre-build flush failure; truncated probe contents; post-build flush
 failure despite successful CLI exit; and missing temporary-root rejection. Failure
-cases verify stale destinations remain unchanged and owned directories are cleaned.
+cases verify stale destinations remain unchanged and owned directories are cleaned. Each fresh `weighin-` build directory is also registered with the Action cancellation scope, so `SIGTERM`/`SIGINT` terminates build children before removing only those owned temporary directories.
 A real invocation against this machine's failing system /tmp is rejected before
 optimization. Its Node24 diagnostic describes an unknown write error; the storage
 investigation independently recorded errno122/EDQUOT.

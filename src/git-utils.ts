@@ -1,4 +1,4 @@
-import * as exec from "@actions/exec";
+import { trackedExec } from "./cancellation";
 
 /** Run a command and capture stdout. Throws on non-zero exit. */
 export async function capture(
@@ -7,7 +7,7 @@ export async function capture(
   cwd?: string,
 ): Promise<string> {
   let out = "";
-  await exec.exec(cmd, args, {
+  await trackedExec(cmd, args, {
     cwd,
     listeners: {
       stdout: (d: Buffer) => {
@@ -26,7 +26,7 @@ export async function captureRaw(
   cwd?: string,
 ): Promise<string> {
   let out = "";
-  await exec.exec(cmd, args, {
+  await trackedExec(cmd, args, {
     cwd,
     silent: true,
     listeners: {

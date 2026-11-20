@@ -32,6 +32,14 @@ import {
   SUPPORTED_PROTOCOL_VERSION,
 } from "./network";
 import {
+  CancellationScope,
+  createCancellationScope,
+  registerOwnedTempPath,
+  runWithCancellation,
+  setActiveCancellationScope,
+  trackedExec,
+} from "./cancellation";
+import {
   isWorkspaceClean,
   getModifiedFiles,
   getHeadSha,
@@ -56,14 +64,19 @@ class RpcCompatibilityError extends Error {}
  * Fails the action with a clear message if not — the caller is responsible
  * for starting the network before invoking this action.
  */
-async function assertRpcHealthy(rpcUrl: string): Promise<void> {
+async function assertRpcHealthy(
+  rpcUrl: string,
+  signal: AbortSignal,
+): Promise<void> {
+  const deadline = AbortSignal.timeout(10_000);
+  const abortSignal = AbortSignal.any([deadline, signal]);
   core.info(`Checking RPC health at ${sanitizeEndpoint(rpcUrl)} ...`);
   try {
     const res = await fetch(rpcUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "getHealth" }),
-      signal: AbortSignal.timeout(10_000),
+      signal: abortSignal,
     });
     if (!res.ok) {
       throw new Error(`HTTP ${res.status} ${res.statusText}`);
@@ -80,7 +93,7 @@ async function assertRpcHealthy(rpcUrl: string): Promise<void> {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ jsonrpc: "2.0", id: 2, method: "getNetwork" }),
-      signal: AbortSignal.timeout(10_000),
+      signal: abortSignal,
     });
     if (!network.ok)
       throw new Error(`HTTP ${network.status} ${network.statusText}`);
@@ -132,12 +145,12 @@ async function validateBaseRef(repoRoot: string, ref: string): Promise<void> {
   }
   if (/^[0-9a-fA-F]{7,40}$/.test(ref)) return;
 
-  const branchRef = await exec.exec(
+  const branchRef = await trackedExec(
     "git",
     ["check-ref-format", `refs/heads/${ref}`],
     { cwd: repoRoot, ignoreReturnCode: true, silent: true },
   );
-  const tagRef = await exec.exec(
+  const tagRef = await trackedExec(
     "git",
     ["check-ref-format", `refs/tags/${ref}`],
     { cwd: repoRoot, ignoreReturnCode: true, silent: true },
@@ -299,15 +312,24 @@ async function checkoutRef(
   // Fetch the ref into the existing repo's object store, then use
   // git worktree add to get a clean directory without touching the
   // main workspace.
-  await exec.exec("git", ["fetch", "--depth=1", "origin", ref], {
+  await trackedExec("git", ["fetch", "--depth=1", "origin", ref], {
     cwd: repoRoot,
   });
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), `weighin-${label}-`));
+  registerOwnedTempPath(
+    dir,
+    () => removeWorktree(repoRoot, dir),
+    `owned ${label} worktree`,
+  );
   core.info(`Checking out ${ref} into ${dir}`);
   try {
-    await exec.exec("git", ["worktree", "add", "--detach", dir, "FETCH_HEAD"], {
-      cwd: repoRoot,
-    });
+    await trackedExec(
+      "git",
+      ["worktree", "add", "--detach", dir, "FETCH_HEAD"],
+      {
+        cwd: repoRoot,
+      },
+    );
   } catch (error) {
     await removeWorktree(repoRoot, dir);
     throw error;
@@ -334,7 +356,10 @@ async function removeWorktree(repoRoot: string, dir: string): Promise<void> {
 // Main
 // ---------------------------------------------------------------------------
 
-async function run(): Promise<void> {
+async function run(
+  signal: AbortSignal,
+  scope: CancellationScope,
+): Promise<void> {
   validatedDiffJson = null;
   let keyDir: string | null = null;
   let sharedKeyFile: string | null = null;
@@ -390,6 +415,14 @@ async function run(): Promise<void> {
 
     keyDir = fs.mkdtempSync(path.join(os.tmpdir(), "weighin-key-"));
     fs.chmodSync(keyDir, 0o700);
+    scope.registerOwnedPath(
+      keyDir,
+      async () => {
+        await fs.promises.rm(keyDir!, { recursive: true, force: true });
+        core.info(`Removed owned deployer key directory: ${keyDir}`);
+      },
+      "owned deployer key directory",
+    );
     sharedKeyFile = path.join(keyDir, "weighin-deployer.key");
 
     core.info(`Base ref:   ${baseRef}`);
@@ -398,7 +431,7 @@ async function run(): Promise<void> {
     core.info(`Key file:   ${sharedKeyFile}`);
 
     // 1. RPC health check — fail fast with a clear message
-    await assertRpcHealthy(rpcUrl);
+    await assertRpcHealthy(rpcUrl, signal);
 
     // 2. Resolve paths from the HEAD workspace (fixtures, config live there)
     const headFixturesPath = resolveRevisionFixturesPath(
@@ -466,6 +499,7 @@ async function run(): Promise<void> {
         rpcUrl,
         keyFile: sharedKeyFile,
         allowCrossTargetSubstitution,
+        signal,
       });
     } catch (err: any) {
       throw new Error(`HEAD measurement failed: ${err.message}`);
@@ -625,46 +659,45 @@ async function run(): Promise<void> {
       core.setFailed(`${violations.length} threshold violation(s) detected`);
     }
   } finally {
-    if (keyDir) {
-      try {
-        fs.rmSync(keyDir, { recursive: true, force: true });
-        core.info(`Removed owned deployer key directory: ${keyDir}`);
-      } catch (err: any) {
-        core.warning(
-          `Could not remove deployer key directory ${keyDir}: ${err.message}`,
-        );
-      }
-    }
+    await scope.shutdown();
   }
 }
 
-run().catch(async (error: Error) => {
-  const message = redactEndpointSecrets(
-    String(error?.message ?? error),
-    configuredRpcUrl,
-  );
-  core.setOutput("result", "fail");
-  core.setOutput("diff-json", validatedDiffJson ?? "{}");
-  core.setFailed(message);
-
-  const reportPathInput = core.getInput("report-path");
-  const headWorkspace = process.env["GITHUB_WORKSPACE"] ?? process.cwd();
-  if (reportPathInput && !outputPathsRejected) {
-    try {
-      const failureReport = generateFailureReport(message);
-      writeReportFile(reportPathInput, headWorkspace, failureReport);
-    } catch (writeErr: any) {
-      core.warning(
-        `Failed to write unsuccessful-comparison report: ${writeErr.message}`,
-      );
-    }
-  }
-
-  if (process.env.GITHUB_STEP_SUMMARY) {
-    await core.summary
-      .addRaw(
-        `## WeighIn comparison failed\n\n${message}\n\nNo passing comparison or policy result was established.\n`,
-      )
-      .write();
-  }
+const cancellation = createCancellationScope({
+  installSignalHandlers: true,
+  setExitCodeOnCancel: true,
 });
+setActiveCancellationScope(cancellation);
+
+runWithCancellation(cancellation, (signal) => run(signal, cancellation))
+  .catch(async (error: Error) => {
+    const message = redactEndpointSecrets(
+      String(error?.message ?? error),
+      configuredRpcUrl,
+    );
+    core.setOutput("result", "fail");
+    core.setOutput("diff-json", validatedDiffJson ?? "{}");
+    core.setFailed(message);
+
+    const reportPathInput = core.getInput("report-path");
+    const headWorkspace = process.env["GITHUB_WORKSPACE"] ?? process.cwd();
+    if (reportPathInput && !outputPathsRejected) {
+      try {
+        const failureReport = generateFailureReport(message);
+        writeReportFile(reportPathInput, headWorkspace, failureReport);
+      } catch (writeErr: any) {
+        core.warning(
+          `Failed to write unsuccessful-comparison report: ${writeErr.message}`,
+        );
+      }
+    }
+
+    if (process.env.GITHUB_STEP_SUMMARY) {
+      await core.summary
+        .addRaw(
+          `## WeighIn comparison failed\n\n${message}\n\nNo passing comparison or policy result was established.\n`,
+        )
+        .write();
+    }
+  })
+  .finally(() => cancellation.dispose());

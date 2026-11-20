@@ -1,0 +1,76 @@
+{
+  "status": "VERIFIED",
+  "scenario": "bounded_prng_contract_parity",
+  "harness_exit": 0,
+  "real_build_deployment_rpc_and_native": true,
+  "raw_io_observed_not_substituted": true,
+  "parity_rejection": {
+    "rejected": true,
+    "message": "Local simulation disagrees with RPC at captured ledger [return-value disagreement (native_sha256: 2c2b27944b6e48ec10a7e76343143548cf54b2e97dca255599f26fbdf62d1a5c, rpc_sha256: 2038e0b606ec9046ba62958a2ba7ba09daf84e3c52deefa3a1b561f5186045e3)]; auth/random/state-dependent invocation is unsupported",
+    "parityDetails": {
+      "transactionData": false,
+      "returnValue": true,
+      "contractEvents": false
+    }
+  },
+  "justified_matching_control": {
+    "accepted": true,
+    "retval_xdr": "AAAADwAAAAVmaXhlZAAAAA==",
+    "cpu_instructions_consumed": 283139,
+    "memory_bytes_consumed": 1126305,
+    "seed": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "ledger": 484,
+    "input_sha256": "e4c6816d693db39bc6c8b04cf47d5ab66669646d0dd398f7e04f11d5f5379eb9"
+  },
+  "rpc_prng_values": [
+    "15764725445078934737",
+    "8969746457395304528",
+    "11711078206644928651",
+    "10746743389641306449"
+  ],
+  "native_zero_seed_prng_values": [
+    "6775509081846337106",
+    "2134185115815765970",
+    "424782024986044791",
+    "8960188967690328188"
+  ],
+  "distinct_genuine_seeds": true,
+  "product_seed_forced": false,
+  "parity_failure_became_success": false,
+  "wasm_sha256": "6fe2e6ce6252d6d90ceb16edd4d3a7f19235e936cf1ec4b7abfc5432a91e782e",
+  "networks": 1,
+  "bounded_draws": 4
+}

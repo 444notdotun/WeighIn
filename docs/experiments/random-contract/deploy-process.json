@@ -1,0 +1,20 @@
+{
+  "wasm_hash": "6fe2e6ce6252d6d90ceb16edd4d3a7f19235e936cf1ec4b7abfc5432a91e782e",
+  "contract_id": "CALYKFXT2HZMJHRRA5OBSKHZ4EN6MTMFGT3NY6PXMSZHEMSKUTIAQXMO",
+  "steps": [
+    {
+      "step": "upload",
+      "result": {
+        "hash": "d1e0be8b02edea3b84bfc52760bbcb64df6011a646dbd09ec52be81cfdb5e3be",
+        "status": "SUCCESS"
+      }
+    },
+    {
+      "step": "create",
+      "result": {
+        "hash": "6da0ee0ff6f14a846bd1317cbc23a36e1a0ea0700c976b815fdbdd65bef74702",
+        "status": "SUCCESS"
+      }
+    }
+  ]
+}

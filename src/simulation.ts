@@ -10,6 +10,7 @@ import { execFile } from "child_process";
 import { Keypair, Transaction, xdr } from "@stellar/stellar-sdk";
 import { z } from "zod";
 import { SUPPORTED_PROTOCOL_VERSION } from "./network";
+import { registerChildProcess } from "./cancellation";
 
 export const sha256 = (value: string | Buffer): string =>
   crypto.createHash("sha256").update(value).digest("hex");
@@ -325,6 +326,7 @@ function execute(
     );
     // Ignore EPIPE here: the exit callback reports a helper that rejects input.
     child.stdin?.on("error", () => {});
+    registerChildProcess(child);
     child.stdin?.end(input ?? "");
   });
 }

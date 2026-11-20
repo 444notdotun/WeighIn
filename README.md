@@ -319,6 +319,9 @@ strict-policy failure in a permitted isolated fork.
 [Cross-contract nested invocation attribution](docs/nested-invocation.md) proves a
 real caller→callee host call charging one combined footprint with per-contract
 event and return attribution.
+[Bounded random-contract parity](docs/random-contract.md) records a real
+PRNG-dependent case being rejected by return-value parity while a deterministic
+control in the same contract still matches.
 
 ## Known Limitations
 

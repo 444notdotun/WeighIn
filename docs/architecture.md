@@ -26,7 +26,9 @@ fixture file at the same relative path and builds and measures its own declarati
 the caller opts into `trusted-policy-ref`/`trusted-policy-path`. In that mode
 the action reads the exact resolved commit from `origin`, validates it before
 measurement, and reports its revision and content hash; HEAD cannot replace it.
-The BASE worktree is removed in `finally`; HEAD remains the caller's checkout.
+The BASE worktree is registered as an owned temporary path and removed by the
+cancellation scope on success, failure, `SIGTERM` or `SIGINT`; HEAD remains the
+caller's checkout. Tracked child processes are terminated before that cleanup.
 
 ## Contract build selection
 

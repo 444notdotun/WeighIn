@@ -466,6 +466,26 @@ the account is now recorded in `provenance.source_account` and compared with the
 environment identities, so saved records measured under different accounts are reported as
 incompatible instead of being compared.
 
+## Bounded random-contract parity validation
+
+The [bounded random-contract proof](random-contract.md) performs a genuine
+build, protocol-28 deployment, RPC simulation and native replay of a contract
+whose `draws(4)` function is bounded to four `env.prng()` draws. The fixed
+zero-seed native replay returned
+`[6775509081846337106, 2134185115815765970, 424782024986044791, 8960188967690328188]`
+while the RPC simulation returned
+`[15764725445078934737, 8969746457395304528, 11711078206644928651, 10746743389641306449]`.
+Both are genuine nonzero values and the product seed was not changed. The
+public `measureInvocation` path rejected the case with return-value-only parity
+mismatch (`transactionData: false`, `returnValue: true`, `contractEvents: false`)
+and `auth/random/state-dependent invocation is unsupported`; a deterministic
+`constant()` case in the same deployed contract reached parity with the same
+fixed zero seed. Durable [raw captures, native replays, environment, exits and
+checksums](experiments/random-contract/) are checked by
+`tests/random-contract.test.cjs` and `tests/native/random-contract.test.cjs`.
+This is one bounded contract on one pinned protocol-28 standalone network, not
+a claim about signed authorization or arbitrary random-dependent contracts.
+
 ## Known boundaries
 
 See [Known limitations](KNOWN_LIMITATIONS.md). [Hosted external validation](hosted-soroban-forge.md)
