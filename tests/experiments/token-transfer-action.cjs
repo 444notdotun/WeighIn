@@ -40,11 +40,13 @@ function verifyBundledAction({ temporary, destination, endpoint, helper, signer,
     const captures = path.join(temporary, `action-${label}`);
     fs.mkdirSync(captures);
     const outputs = path.join(captures, 'outputs.txt');
+    const summary = path.join(captures, 'summary.md');
     fs.writeFileSync(outputs, '');
+    fs.writeFileSync(summary, '');
     const result = cp.spawnSync(process.execPath, ['--require', path.join(__dirname, 'token-transfer-action-preload.cjs'), bundle], {
       cwd: workspace, encoding: 'utf8', maxBuffer: 8 * 1024 * 1024,
       env: { ...process.env, GITHUB_WORKSPACE: workspace, GITHUB_EVENT_PATH: '',
-        GITHUB_OUTPUT: outputs, GITHUB_STEP_SUMMARY: path.join(captures, 'summary.md'),
+        GITHUB_OUTPUT: outputs, GITHUB_STEP_SUMMARY: summary,
         'INPUT_FIXTURES-PATH': 'fixture.json', 'INPUT_CONFIG-PATH': 'policy.toml',
         'INPUT_BASE-REF': 'main', 'INPUT_RPC-URL': endpoint, 'INPUT_SKIP-BUILD': 'true',
         'INPUT_GITHUB-TOKEN': '', WEIGHIN_HELPER_PATH: helper,
