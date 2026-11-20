@@ -6,7 +6,7 @@ const { parseFixtures } = require('../dist/identity');
 const { validateConfig } = require('../dist/threshold');
 const root = path.resolve(__dirname, '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
-const mainDocs = ['README.md', 'CONTRIBUTING.md', 'docs/EVIDENCE.md', 'docs/KNOWN_LIMITATIONS.md', 'docs/architecture.md', 'docs/DEPENDENCY_SECURITY.md', 'docs/repeatability.md', 'docs/ledger-variation.md'];
+const mainDocs = ['README.md', 'CONTRIBUTING.md', 'docs/EVIDENCE.md', 'docs/KNOWN_LIMITATIONS.md', 'docs/architecture.md', 'docs/DEPENDENCY_SECURITY.md', 'docs/repeatability.md', 'docs/ledger-variation.md', 'docs/random-contract.md'];
 
 test('public reviewer path resolves product documentation and retained evidence without internal notes', () => {
   for (const file of mainDocs) {
@@ -26,6 +26,9 @@ test('public reviewer path resolves product documentation and retained evidence 
   assert.ok(read('docs/KNOWN_LIMITATIONS.md').includes('(ledger-variation.md)'));
   assert.ok(read('docs/repeatability.md').includes('(ledger-variation.md)'));
   assert.ok(read('docs/EVIDENCE.md').includes('(ledger-variation.md)'));
+  assert.ok(read('docs/KNOWN_LIMITATIONS.md').includes('(random-contract.md)'));
+  assert.ok(read('docs/EVIDENCE.md').includes('(random-contract.md)'));
+  assert.ok(read('README.md').includes('(docs/random-contract.md)'));
 });
 
 

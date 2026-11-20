@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "generated_by": "tests/experiments/verify-random-contract.cjs",
+  "files": {
+    "build-process.json": "3006e3b169eb5f7dc466221a18ebd04c70822610db5c40f43dd385db79c6b305",
+    "cases.json": "a3de34738d00ccd43f17a8fc73b8d8ff4b84b58b34479c3baa8e1f90cb31239b",
+    "contract/Cargo.lock": "af261b30de67d5f534ef58392be43f80d802200c26dc35da25e6f71278329912",
+    "contract/Cargo.toml": "bd5c50e30a1cb6b87a287513204f8497b1747b21e58268449f0739a1455c33fa",
+    "contract/src/lib.rs": "569a94fd57e99e5f890720608faf0d2b5481d5f4ae423a9a34b2ba04fcceed52",
+    "contract.wasm": "6fe2e6ce6252d6d90ceb16edd4d3a7f19235e936cf1ec4b7abfc5432a91e782e",
+    "deploy-process.json": "87f9b4bf0734d3f2e2a824000e593c40cf843dbb876509d6878318d1de40e98d",
+    "environment.json": "0094591308527bf7e24dfdc3875c066e43830faa2ecb0022fcb2e752517251b9",
+    "errors.json": "85b9b4ca2ce438077b4e51020e86c2eeca9afb429198a5f744b676bfc9d35081",
+    "native-replays.json": "630af33d1d4922c954702817141753fd9a4faa615c20903b5e2b1223c615dc13",
+    "rpc-captures.json": "d1250ffa593881b19a872e9627a7e32f7baf92c6f47d3cc744f2c12801fb6ec8",
+    "rust-toolchain.toml": "dc3976c0370b970f99e4ad6d48364f9a5dc22c748c7a3187f12e1f15be99abd2",
+    "summary.md": "6256bd4a766ac2519ae938da7c07302525a2fdbff47af878672d3e684877bbbd",
+    "verification.json": "8539f6081878c5a6b4938bcf35896b91e2b44440d39b2d8936fbd1fedd829c12"
+  }
+}
