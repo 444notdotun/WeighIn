@@ -71,6 +71,7 @@ Module._load = function (name, parent, ...args) {
   if (
     parent?.filename.endsWith("/dist/action.js") ||
     parent?.filename.endsWith("/dist/build.js") ||
+    parent?.filename.endsWith("/dist/cancellation.js") ||
     parent?.filename.endsWith("/dist/git-utils.js")
   ) {
     if (name === "@actions/core" && parent?.filename.endsWith("/dist/action.js")) {

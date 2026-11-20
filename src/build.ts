@@ -2,9 +2,9 @@ import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
 import { createHash } from "crypto";
-import * as exec from "@actions/exec";
 import { z } from "zod";
 import { parseFixtures } from "./identity";
+import { registerOwnedTempPath, trackedExec } from "./cancellation";
 
 export interface BuiltContract {
   wasm_path: string;
@@ -292,7 +292,7 @@ export async function buildContracts(
     let stdout = "",
       stderr = "";
     try {
-      await exec.exec(tool, args, {
+      await trackedExec(tool, args, {
         cwd,
         env: commandEnv,
         silent: true,
@@ -580,6 +580,11 @@ export async function buildContracts(
           `Cannot create build temporary storage: ${error.message}`,
         );
       }
+      registerOwnedTempPath(
+        outputDir,
+        () => fs.rmSync(outputDir, { recursive: true, force: true }),
+        "owned build temporary directory",
+      );
       try {
         verifyBuildStorage(outputDir);
         const inputSnapshot = snapshotContractInputs(

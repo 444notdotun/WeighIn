@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+import { registerOwnedTempPath } from "./cancellation";
 
 const OWNED_DIR_PREFIX = "weighin-key-";
 const OWNED_KEY_FILE_NAME = "deployer-key";
@@ -37,6 +38,11 @@ export async function acquireDeployerKey(
     path.join(os.tmpdir(), OWNED_DIR_PREFIX),
   );
   await fs.promises.chmod(dir, 0o700);
+  registerOwnedTempPath(
+    dir,
+    () => fs.promises.rm(dir, { recursive: true, force: true }),
+    "owned deployer key directory",
+  );
 
   return {
     keyFile: path.join(dir, OWNED_KEY_FILE_NAME),
