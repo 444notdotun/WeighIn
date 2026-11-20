@@ -7,6 +7,7 @@ pub struct Transfer;
 #[contractimpl]
 impl Transfer {
     pub fn transfer(env: Env, asset: Address, from: Address, to: Address, amount: i128) {
+        from.require_auth();
         let token = token::Client::new(&env, &asset);
         #[cfg(feature = "redundant-balance-reads")]
         for _ in 0..12 {

@@ -13,6 +13,8 @@ the asset and network. It reads both balances before benchmarking. Token
 balances and transfer amounts use seven decimal places.
 
 Every measurement uses the same funded sender as the transaction source.
+The client requires that sender's authorization at the root invocation,
+allowing recording-mode simulation to attach the nested token transfer.
 Baseline and control use the same transfer-client WASM. The regression
 variant adds twelve redundant balance calls before the same transfer. The
 zero-tolerance CPU policy uses the same fixture, contract, and case IDs across
@@ -60,3 +62,5 @@ as a policy rejection.
 
 The [Windows attempt](experiments/token-transfer-windows-attempt/verification.json)
 reached committed setup and stopped at the Linux x64 measurement guard.
+The [first hosted attempt](experiments/token-transfer-auth-attempt/verification.json)
+reached the token call and exposed the root authorization requirement.
