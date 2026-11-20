@@ -8,6 +8,10 @@ policy. A changed WASM/runtime address does not prevent comparison. Conclusions
 apply to the fixtures and environments below. This page distinguishes real live
 experiments, frozen replay tests and expected-negative hosted verification.
 
+The [funded standard token transfer](token-transfer.md) exercises token-backed
+state with committed trustlines and balances, a receipt-bound asset address,
+native replay, and a signed balance-changing transfer.
+
 ## Published revision validation
 
 [PR #13](https://github.com/WeighInNG/WeighIn/pull/13) published and tested reviewed

@@ -122,6 +122,7 @@ jobs:
 
       - name: Test measurement adapter and native source
         run: |
+          cargo +1.95.0 fetch --locked --manifest-path native/simulation/Cargo.toml
           cargo +1.95.0 fmt --check --manifest-path native/simulation/Cargo.toml
           npm test
           npm run test:native
@@ -162,3 +163,24 @@ jobs:
           path: |
             weighin-report.md
             pr-metadata.json
+
+      - name: Verify funded token transfer
+        run: |
+          stellar contract build --locked --optimize=true \
+            --manifest-path tests/fixtures/token-transfer/Cargo.toml --out-dir "$RUNNER_TEMP/token-control"
+          stellar contract build --locked --optimize=true --features redundant-balance-reads \
+            --manifest-path tests/fixtures/token-transfer/Cargo.toml --out-dir "$RUNNER_TEMP/token-regression"
+          WEIGHIN_EXPERIMENT_RPC_URL=http://localhost:8000/rpc \
+          WEIGHIN_EXPERIMENT_IMAGE="$(docker inspect --format '{{.Config.Image}}' stellar-quickstart)" \
+          node tests/experiments/verify-token-transfer.cjs token-transfer-capture \
+            native/simulation/target/x86_64-unknown-linux-gnu/release/weighin-simulation \
+            "$RUNNER_TEMP/token-control/contract_test.wasm" \
+            "$RUNNER_TEMP/token-regression/contract_test.wasm"
+
+      - name: Upload token transfer evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: token-transfer-capture
+          path: token-transfer-capture/
+          if-no-files-found: ignore
