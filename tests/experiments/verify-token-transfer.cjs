@@ -8,6 +8,7 @@ const { createHash } = require('node:crypto');
 const { Asset, Contract, Keypair, Operation, TransactionBuilder, nativeToScVal,
   rpc, scValToNative, xdr } = require('@stellar/stellar-sdk');
 const { bindAsset, compare, policy, transferFixture, transferOperation, verifyTransferReplay } = require('./token-transfer-cases.cjs');
+const { verifyBundledAction } = require('./token-transfer-action.cjs');
 const { runMeasurement } = require('../../dist/measurement');
 const { ensureAccountReady } = require('../../dist/account');
 
@@ -100,7 +101,10 @@ async function main() {
     const environment = { node: process.version, platform: process.platform, arch: process.arch,
       endpoint, network, helper_sha256: sha256(fs.readFileSync(helper)),
       stellar_sdk: require('../../package-lock.json').packages['node_modules/@stellar/stellar-sdk'].version,
-      repository_base: cp.execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
+      checkout_sha: cp.execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
+      github_run: process.env.GITHUB_ACTIONS === 'true'
+        ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
+        : null,
       image: process.env.WEIGHIN_EXPERIMENT_IMAGE ?? null,
       identities: { issuer: issuer.publicKey(), sender: sender.publicKey(), recipient: recipient.publicKey() } };
     for (const [name, artifact] of [['baseline', baseWasm], ['regression', regressionWasm]]) {
@@ -147,6 +151,12 @@ async function main() {
     await reject('overdraw', () => measure('overdraw', baseWasm, bound, '1000000001'), /(?:Contract|Error).*Balance|Error\(Contract, #10\)/i);
     await reject('missing-account', () => measure('missing-account', baseWasm, bound, amount,
       seed('never-funded').publicKey()), /Invocation source account is not available on the network/);
+
+    const signer = path.join(temporary, 'funded-sender.key');
+    fs.writeFileSync(signer, sender.secret(), { mode: 0o600 });
+    verifyBundledAction({ temporary, destination, endpoint, helper, signer, policy,
+      baseline: baseWasm, regression: regressionWasm,
+      fixture: transferFixture('transfer.wasm', bound, sender.publicKey(), recipient.publicKey(), amount) });
     assert.deepEqual(await balances(), startingBalances, 'simulation must discard transfer writes');
 
     const signedProbe = transaction(await server.getAccount(sender.publicKey()),

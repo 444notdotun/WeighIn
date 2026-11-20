@@ -22,6 +22,12 @@ the comparisons. It accepts the control and rejects the injected CPU
 regression. An overdraw must fail with a token contract error, and an unfunded
 source account must fail before simulating a transfer.
 
+The harness also executes the shipped Action bundle against a temporary Git
+history with the same funded fixture. A preload supplies the funded sender to
+the Action's temporary key directory and records RPC and helper traffic.
+The archive retains the bundle's process exits, reports and diffs for both
+comparisons.
+
 Measurement records recording-mode authorization and discards simulated
 writes. The experiment separately checks the sender's source-account
 authorization entry and signs and submits one real transfer. It checks that
