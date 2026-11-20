@@ -122,6 +122,7 @@ jobs:
 
       - name: Test measurement adapter and native source
         run: |
+          cargo +1.95.0 fetch --locked --manifest-path native/simulation/Cargo.toml
           cargo +1.95.0 fmt --check --manifest-path native/simulation/Cargo.toml
           npm test
           npm run test:native
