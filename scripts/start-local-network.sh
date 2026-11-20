@@ -7,15 +7,57 @@ IMAGE="stellar/quickstart@sha256:4c8bad1ef7341205b898f83d9489321da80c7bd74183100
 OWNER_LABEL="io.weighin.managed-by"
 OWNER_VALUE="weighin-start-local-network"
 PORT=8000
+
+usage() {
+    echo "Usage: $0 [--name CONTAINER_NAME] [--port HOST_PORT]"
+}
+
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --name|--port)
+            if [ "$#" -lt 2 ] || [[ "$2" == --* ]]; then
+                echo "Error: $1 requires a value." >&2
+                exit 2
+            fi
+            if [ "$1" = "--name" ]; then
+                CONTAINER_NAME="$2"
+            else
+                PORT="$2"
+            fi
+            shift 2
+            ;;
+        --help)
+            usage
+            exit 0
+            ;;
+        *)
+            echo "Error: unknown argument '$1'." >&2
+            usage >&2
+            exit 2
+            ;;
+    esac
+done
+
+if [[ ! "${CONTAINER_NAME}" =~ ^[a-zA-Z0-9][a-zA-Z0-9_.-]*$ ]]; then
+    echo "Error: --name must start with a letter or digit and contain only letters, digits, dots, underscores or hyphens." >&2
+    exit 2
+fi
+if [[ ! "${PORT}" =~ ^[1-9][0-9]{0,4}$ ]] || (( PORT > 65535 )); then
+    echo "Error: --port must be a decimal integer from 1 to 65535 without leading zeros." >&2
+    exit 2
+fi
+
 RPC_URL="http://localhost:${PORT}/rpc"
 
 # The CI builds TypeScript and installs Node dependencies before this script.
 node -e "require('./dist/account'); require('@stellar/stellar-sdk')"
 
 echo "Checking if container '${CONTAINER_NAME}' is already running..."
-existing_container="$(docker ps -a -q -f "name=^/${CONTAINER_NAME}$")"
+# Docker treats its name filter as a regular expression.
+name_pattern="${CONTAINER_NAME//./\\.}"
+existing_container="$(docker ps -a -q --no-trunc -f "name=^/${name_pattern}$")"
 if [ -n "${existing_container}" ]; then
-    if ! owner="$(docker inspect --format "{{ index .Config.Labels \"${OWNER_LABEL}\" }}" "${CONTAINER_NAME}")"; then
+    if ! owner="$(docker inspect --format "{{ index .Config.Labels \"${OWNER_LABEL}\" }}" "${existing_container}")"; then
         echo "Error: Could not verify ownership of '${CONTAINER_NAME}'; leaving it untouched." >&2
         exit 1
     fi
@@ -31,7 +73,7 @@ if [ -n "${existing_container}" ]; then
     else
         echo "Explicit replacement authorized; removing '${CONTAINER_NAME}'..."
     fi
-    docker rm -f "${CONTAINER_NAME}"
+    docker rm -f "${existing_container}"
 fi
 
 # Until readiness is confirmed, any exit stops the container this attempt

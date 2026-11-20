@@ -122,6 +122,7 @@ jobs:
 
       - name: Test measurement adapter and native source
         run: |
+          cargo +1.95.0 fetch --locked --manifest-path native/simulation/Cargo.toml
           cargo +1.95.0 fmt --check --manifest-path native/simulation/Cargo.toml
           npm test
           npm run test:native
@@ -141,6 +142,23 @@ jobs:
             echo "$status"
             exit 1
           fi
+
+      - name: Verify concurrent local sidecars
+        run: |
+          status=0
+          node scripts/verify-local-sidecar-isolation.cjs "$RUNNER_TEMP/weighin-sidecar-isolation.json" || status=$?
+          cd "$RUNNER_TEMP"
+          if [ -f weighin-sidecar-isolation.json ]; then
+            sha256sum weighin-sidecar-isolation.json > weighin-sidecar-isolation.sha256
+          fi
+          exit "$status"
+
+      - name: Upload sidecar isolation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: weighin-sidecar-isolation
+          path: ${{ runner.temp }}/weighin-sidecar-isolation.*
 
       - name: Start local Stellar network
         run: bash scripts/start-local-network.sh
