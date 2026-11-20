@@ -1,0 +1,23 @@
+{
+  "status": "UNMODIFIED_RPC_FIELDS",
+  "live_input_sha256": "0636a051550df8bc28e7f47d9e52aad2d8b35831dc21abebadbd1975f826a17f",
+  "expired_input_sha256": "74b72f53d2c335a5726de5a1c92d031d72e9f3ba3abada805ba6ef7c021a05f9",
+  "changed_fields": [
+    "header_xdr"
+  ],
+  "unchanged_fields": [
+    "schema_version",
+    "network_passphrase",
+    "host_function_xdr",
+    "source_account_xdr",
+    "entries",
+    "instruction_leeway",
+    "seed"
+  ],
+  "live_header_ledger": 2930,
+  "expired_header_ledger": 3650,
+  "temporary_live_until": 3649,
+  "live_entry_origin": "raw getLedgerEntries response at live observation",
+  "expired_header_origin": "raw getLedgers response after natural expiry",
+  "ttl_field_mutated": false
+}

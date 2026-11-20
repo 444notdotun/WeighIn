@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "generated_by": "tests/experiments/verify-temporary-ttl.cjs",
+  "files": {
+    "build-process.json": "e7af439d5aaf25cce9abc1356f8436187e14dffe1b907d8b8724ef200cf449ae",
+    "cases.json": "d3102660dc0827ef813b1321ebac037fe781439889eb25a421ca25451e786464",
+    "composition.json": "162dd6b53f625808024d4c13db2fccafe4ffb4aebc33aff5086fe9e0671ea628",
+    "contract/Cargo.lock": "af261b30de67d5f534ef58392be43f80d802200c26dc35da25e6f71278329912",
+    "contract/Cargo.toml": "bd5c50e30a1cb6b87a287513204f8497b1747b21e58268449f0739a1455c33fa",
+    "contract/src/lib.rs": "8254b0a1e5dccda2c4256c3b0248d5853ed64e86cf39c218d177554cd56b0fed",
+    "contract.wasm": "135fc552c0337182c173d66876a0e5d0664970b8e593a70bb1b2d9079ade9498",
+    "deploy-process.json": "4f2732ec8f939b55499b36c7f5e863f5aafac54c7f5e022855301e2e4cbe3e9a",
+    "environment.json": "0550b1e431dbffdeb379a0b026ab56a70b175e02ac92bb57b2dcaaf3c3b12d11",
+    "ledger-observations.json": "e4eb809b9b37e2bd386f834475ec3e28c9157b6ae6e82654ee503f45f9104c58",
+    "native-replays.json": "e9d8b968abcb0dcb1afb2aed8f40c01898607fed3d009844b891ef36584e1346",
+    "rpc-captures.json": "49bb5a7f6659ee837e81fc39ee1d63e8260bfaa47c7fa28dfb1ce1d657297f06",
+    "rust-toolchain.toml": "dc3976c0370b970f99e4ad6d48364f9a5dc22c748c7a3187f12e1f15be99abd2",
+    "summary.md": "0a2942756aa4a225772e2ae3d4b8b02c0d7f17351f014346dd409e10a09ad677",
+    "verification.json": "023550b4a645af24d4713585a9728361c44ba4884bff9581905271d5a0af099b"
+  }
+}

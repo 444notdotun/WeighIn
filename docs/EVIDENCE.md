@@ -486,6 +486,21 @@ checksums](experiments/random-contract/) are checked by
 This is one bounded contract on one pinned protocol-28 standalone network, not
 a claim about signed authorization or arbitrary random-dependent contracts.
 
+## Temporary-entry TTL validation
+
+The [temporary-entry TTL proof](temporary-ttl.md) writes one genuine temporary
+entry on the pinned protocol-28 standalone network. The live snapshot was
+accepted by `measureInvocation` and reproduced by native replay; the genuine
+`liveUntilLedgerSeq` was `3649`, and RPC returned no live entry at ledger `3650`.
+The helper's defensive archived-entry rejection was exercised by pairing those
+unchanged entry fields with a later genuine ledger header (`header_xdr` only),
+producing exit 1 with `archived ledger state is unsupported`. No TTL field was
+edited. [Raw observations, native inputs/exits, composition origins and
+checksums](experiments/temporary-ttl/) are checked by
+`tests/temporary-ttl.test.cjs` and `tests/native/temporary-ttl.test.cjs`. This
+does not claim that RPC exposes archived rows or that restore/general archived
+state is supported.
+
 ## Known boundaries
 
 See [Known limitations](KNOWN_LIMITATIONS.md). [Hosted external validation](hosted-soroban-forge.md)

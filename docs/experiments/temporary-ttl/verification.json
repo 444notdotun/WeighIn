@@ -1,0 +1,38 @@
+{
+  "status": "VERIFIED",
+  "scenario": "temporary_entry_ttl_liveness_and_archived_control",
+  "harness_exit": 0,
+  "real_build_deployment_rpc_and_native": true,
+  "raw_io_observed_not_substituted": true,
+  "live_case": {
+    "accepted": true,
+    "cpu_instructions_consumed": 303331,
+    "memory_bytes_consumed": 1127031,
+    "retval_xdr": "AAAAAwAAACo=",
+    "ledger": 2930,
+    "input_sha256": "0636a051550df8bc28e7f47d9e52aad2d8b35831dc21abebadbd1975f826a17f"
+  },
+  "natural_expiry": {
+    "live_until": 3649,
+    "observed_absent_at_ledger": 3650,
+    "entry_count": 0
+  },
+  "archived_control": {
+    "rejected": true,
+    "exit_status": 1,
+    "message": "archived ledger state is unsupported",
+    "header_ledger": 3650,
+    "entry_live_until": 3649,
+    "input_sha256": "74b72f53d2c335a5726de5a1c92d031d72e9f3ba3abada805ba6ef7c021a05f9"
+  },
+  "invalid_input_control": {
+    "rejected": true,
+    "exit_status": 1,
+    "message": "Invalid symbol 45, offset 3.: Invalid symbol 45, offset 3.",
+    "input_sha256": "e3a5d3eeea8002e8e98bcaa1d4f8fb42af44d9970f10ade8b393aa327e816543"
+  },
+  "ttl_field_mutated": false,
+  "header_advanced_from_genuine_rpc": true,
+  "wasm_sha256": "135fc552c0337182c173d66876a0e5d0664970b8e593a70bb1b2d9079ade9498",
+  "networks": 1
+}
