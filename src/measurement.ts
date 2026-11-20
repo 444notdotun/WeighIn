@@ -833,10 +833,20 @@ export async function ensureContractDeployed(options: {
     options.rpcUrl,
     options.signal,
   );
+  const result = created.returnValue;
+  const observedAddress =
+    result instanceof xdr.ScVal && result.switch().name === "scvAddress"
+      ? Address.fromScVal(result).toString()
+      : undefined;
+  if (!result || observedAddress !== options.contractId) {
+    throw new Error(
+      `Contract creation receipt address mismatch (expected=${options.contractId}, observed=${observedAddress ?? "no address"})`,
+    );
+  }
   console.log(`Deployed at ${options.contractId}`);
   return {
     source: "created",
-    return_xdr: created.returnValue?.toXDR("base64"),
+    return_xdr: result.toXDR("base64"),
   };
 }
 

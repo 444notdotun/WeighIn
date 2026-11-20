@@ -13245,21 +13245,21 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:npm/follow-redirects@1.16.1",
+      "bom-ref": "pkg:npm/follow-redirects@1.16.3",
       "name": "follow-redirects",
-      "version": "1.16.1",
-      "purl": "pkg:npm/follow-redirects@1.16.1",
+      "version": "1.16.3",
+      "purl": "pkg:npm/follow-redirects@1.16.3",
       "scope": "required",
       "hashes": [
         {
           "alg": "SHA-512",
-          "content": "14dbc51b3a0c2d6984e988fdb296ffce377bca23421e2016f7f4e0f425eb43cc2ebb7d87b6524ec163b5d4e25a7e5e457d8dc3c53750d2f8f8db353592fbf98e"
+          "content": "b68392a2a37a779d568dfd5a38525872856fd5a343f6b8ff0b08cb534573e34a03b92a560dac8278a7b82692f934bd16745be838e088dc1468ebd1da8636d1d4"
         }
       ],
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://registry.npmjs.org/follow-redirects/-/follow-redirects-1.16.1.tgz"
+          "url": "https://registry.npmjs.org/follow-redirects/-/follow-redirects-1.16.3.tgz"
         }
       ],
       "properties": [
@@ -13277,7 +13277,7 @@
         },
         {
           "name": "weighin:lock-integrity",
-          "value": "sha512-FNvFGzoMLWmE6Yj9spb/zjd7yiNCHiAW9/Tg9CXrQ8wuu32HtlJOwWO11OJafl5FfY3DxTdQ0vj42zU1kvv5jg=="
+          "value": "sha512-toOSoqN6d51Wjf1aOFJYcoVv1aND9rj/CwjLU0Vz40oDuSpWDayCeKe4JpL5NL0WdFvoOOCI3BRo69HahjbR1A=="
         },
         {
           "name": "weighin:lockfile",
@@ -13285,7 +13285,7 @@
         },
         {
           "name": "weighin:resolved-source",
-          "value": "https://registry.npmjs.org/follow-redirects/-/follow-redirects-1.16.1.tgz"
+          "value": "https://registry.npmjs.org/follow-redirects/-/follow-redirects-1.16.3.tgz"
         }
       ]
     },
@@ -16978,7 +16978,7 @@
     {
       "ref": "pkg:npm/axios@1.20.0",
       "dependsOn": [
-        "pkg:npm/follow-redirects@1.16.1",
+        "pkg:npm/follow-redirects@1.16.3",
         "pkg:npm/form-data@4.0.6",
         "pkg:npm/https-proxy-agent@5.0.1",
         "pkg:npm/proxy-from-env@2.1.0"
@@ -17174,7 +17174,7 @@
       ]
     },
     {
-      "ref": "pkg:npm/follow-redirects@1.16.1",
+      "ref": "pkg:npm/follow-redirects@1.16.3",
       "dependsOn": []
     },
     {
