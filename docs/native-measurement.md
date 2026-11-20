@@ -27,8 +27,12 @@ Cargo workspace prevents it from joining a caller's contract workspace. Cargo, i
 WeighIn does not install them. On GitHub, the Action sources reside beside its
 bundle, independently of the caller's workspace or base worktree.
 
-For an already-built compatible executable, set `WEIGHIN_HELPER_PATH` to its
-absolute path, or use `helperPath` in `runMeasurement` options. Overrides are
+For an already-built compatible executable, pass `--helper-path <path>` to the
+CLI, set `WEIGHIN_HELPER_PATH`, or use `helperPath` in `runMeasurement` options.
+The flag takes precedence over the environment variable. Relative paths resolve
+from the working directory. A missing or nonexecutable override fails without
+trying another helper or building one. The Linux x64 and standalone protocol-28
+requirements apply to overrides. Overrides are
 validated for executable access and versioned output; the binary's SHA256 is
 recorded. Missing binaries, malformed output, host failures and unsupported
 protocols produce errors, not measurements containing zero.
@@ -55,6 +59,8 @@ The Action already does so; the CLI consumes existing WASMs.
 
 ```bash
 node dist/cli.js weighin-fixtures.json --rpc-url http://localhost:8000/rpc --output weighin-results.json
+# Reuse a compatible helper that has already been built.
+node dist/cli.js weighin-fixtures.json --helper-path ./path/to/weighin-simulation --output weighin-results.json
 ```
 
 The CLI writes measurement JSON and exits 1 on measurement failure. It remains a

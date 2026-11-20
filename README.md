@@ -291,7 +291,8 @@ all eleven keys and their exact semantics.
 The CLI measures existing WASMs and writes JSON; it does not build, compare
 revisions, enforce thresholds or post comments. Provision the native helper/RPC,
 then run `node dist/cli.js <fixtures.json> --rpc-url <standalone-rpc> --output <results.json>`
-from a built checkout. See [native provisioning](docs/native-measurement.md).
+from a built checkout. Pass `--helper-path <path>` to use an existing compatible
+native helper. See [native provisioning](docs/native-measurement.md).
 
 SDK metadata is reported per contract from the Cargo workspace/lock owning each
 fixture WASM (`contract/Cargo.lock` or a root workspace `Cargo.lock`), or
