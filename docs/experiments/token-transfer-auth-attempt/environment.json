@@ -1,0 +1,22 @@
+{
+  "node": "v24.22.3",
+  "platform": "linux",
+  "arch": "x64",
+  "endpoint": "http://localhost:8000/rpc",
+  "network": {
+    "friendbotUrl": "http://localhost:8000/friendbot",
+    "passphrase": "Standalone Network ; February 2017",
+    "protocolVersion": 28
+  },
+  "helper_sha256": "7642e4f174cf1e86e35938f11258bfe53f02db90aacfa1c880d71318e7054c03",
+  "stellar_sdk": "16.0.1",
+  "repository_base": "f3e3fe252c2f749045c276216b11cf649d9f2f75",
+  "image": "stellar/quickstart@sha256:4c8bad1ef7341205b898f83d9489321da80c7bd74183100fc8e2a39a5938c7d5",
+  "identities": {
+    "issuer": "GDP5XZBBQLSUXT2AUVPSXJEWWE7RXYLIKZQTO6DIOWCKOR6QQN74KH7E",
+    "sender": "GDCKCFRCAI5H6TUZE3KBSXD7CXSAYYUCTGSHFE3FOBPKMWNAJS2E4WHM",
+    "recipient": "GBSS6UIOVJKVE7ZS2HEDLNMOTV6KAVOQ5CW6NBWZ742BUOMEN5WXSDBD"
+  },
+  "baseline_wasm_sha256": "c5982b08f47f466e8752b7b88c6cd5966f422318cd4ca502cbfd7157684a5092",
+  "regression_wasm_sha256": "4338066203c2482f1625e3bfa1b7892ce4d8ecb6de7c2a021e009b5cd8bd9046"
+}

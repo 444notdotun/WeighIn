@@ -1,0 +1,33 @@
+{
+  "id": "standard-token",
+  "contracts": [
+    {
+      "id": "transfer-client",
+      "wasm_path": "baseline.wasm",
+      "invocations": [
+        {
+          "id": "funded-transfer",
+          "function_name": "transfer",
+          "args": [
+            {
+              "type": "address",
+              "value": "CCHB77Y33OHDM4M6PGVLKAFZVGZHH3AWI6RW6XK32FDKPQPXGRWA66TZ"
+            },
+            {
+              "type": "address",
+              "value": "GDCKCFRCAI5H6TUZE3KBSXD7CXSAYYUCTGSHFE3FOBPKMWNAJS2E4WHM"
+            },
+            {
+              "type": "address",
+              "value": "GBSS6UIOVJKVE7ZS2HEDLNMOTV6KAVOQ5CW6NBWZ742BUOMEN5WXSDBD"
+            },
+            {
+              "type": "i128",
+              "value": "25000000"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

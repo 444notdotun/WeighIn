@@ -1,0 +1,23 @@
+{
+  "node": "v24.22.2",
+  "platform": "linux",
+  "arch": "x64",
+  "endpoint": "http://localhost:8000/rpc",
+  "network": {
+    "friendbotUrl": "http://localhost:8000/friendbot",
+    "passphrase": "Standalone Network ; February 2017",
+    "protocolVersion": 28
+  },
+  "helper_sha256": "7642e4f174cf1e86e35938f11258bfe53f02db90aacfa1c880d71318e7054c03",
+  "stellar_sdk": "16.0.1",
+  "checkout_sha": "e21a6343fe309bfeef1f0a85cafece6499a62b01",
+  "github_run": "https://github.com/WeighInNG/WeighIn/actions/runs/44759119903",
+  "image": "stellar/quickstart@sha256:4c8bad1ef7341205b898f83d9489321da80c7bd74183100fc8e2a39a5938c7d5",
+  "identities": {
+    "issuer": "GDP5XZBBQLSUXT2AUVPSXJEWWE7RXYLIKZQTO6DIOWCKOR6QQN74KH7E",
+    "sender": "GDCKCFRCAI5H6TUZE3KBSXD7CXSAYYUCTGSHFE3FOBPKMWNAJS2E4WHM",
+    "recipient": "GBSS6UIOVJKVE7ZS2HEDLNMOTV6KAVOQ5CW6NBWZ742BUOMEN5WXSDBD"
+  },
+  "baseline_wasm_sha256": "6d2103a79c9a5d9b14b1d56a847d2b3d24dc12eb526f2471cf99a5525d1fcf57",
+  "regression_wasm_sha256": "b2bdac2da2a3473ad8c50aa001883d020f24f6832bad53cd073980fc48184a36"
+}
