@@ -191,9 +191,7 @@ export function parseArgs(
 
   // If baseFixturesPath is set, ensure output is not jsonStdout (we need to write files)
   if (jsonStdout && baseFixturesPath) {
-    throw new Error(
-      "Cannot use --json-stdout with base fixtures comparison",
-    );
+    throw new Error("Cannot use --json-stdout with base fixtures comparison");
   }
 
   const outputFile = optionOutputPath ?? positionalOutputPath;
@@ -309,7 +307,9 @@ async function main() {
     });
 
     // Ensure headResults is an array for consistent processing
-    const headResultsArray = Array.isArray(headResults) ? headResults : [headResults];
+    const headResultsArray = Array.isArray(headResults)
+      ? headResults
+      : [headResults];
 
     // If base fixtures path is provided, measure base and compute diff
     let config: import("./threshold").WeighinConfig | null = null;
@@ -331,24 +331,33 @@ async function main() {
       violations = enforceThresholds(diff, config);
 
       // Count total benchmarks from head results
-      totalBenchmarks = headResultsArray.flatMap((c) => c.benchmarks ?? []).length;
+      totalBenchmarks = headResultsArray.flatMap(
+        (c) => c.benchmarks ?? [],
+      ).length;
 
       // Track which benchmarks have violations (by function_name + case_id)
       for (const v of violations) {
-        const key = `${v.function_name ?? 'unknown'}:${v.case_id ?? 'no-case'}`;
+        const key = `${v.function_name ?? "unknown"}:${v.case_id ?? "no-case"}`;
         benchmarksWithViolations.add(key);
       }
     } else {
       // No base comparison: all measured benchmarks are tracked for violation counts
-      totalBenchmarks = headResultsArray.flatMap((c) => c.benchmarks ?? []).length;
+      totalBenchmarks = headResultsArray.flatMap(
+        (c) => c.benchmarks ?? [],
+      ).length;
       config = loadConfig("weighin.toml");
       violations = enforceThresholds(
-        { contracts: [], hasRegression: false, newContracts: [], removedContracts: [] } as DiffResult,
+        {
+          contracts: [],
+          hasRegression: false,
+          newContracts: [],
+          removedContracts: [],
+        } as DiffResult,
         config,
       );
       // Without base comparison, still track violations from config enforcement
       for (const v of violations) {
-        const key = `${v.function_name ?? 'unknown'}:${v.case_id ?? 'no-case'}`;
+        const key = `${v.function_name ?? "unknown"}:${v.case_id ?? "no-case"}`;
         benchmarksWithViolations.add(key);
       }
     }
@@ -362,11 +371,12 @@ async function main() {
 
     // Display summary
     const benchmarkLabel = totalBenchmarks === 1 ? "benchmark" : "benchmarks";
-    const violationLabel =
-      violationCount === 1 ? "violation" : "violations";
+    const violationLabel = violationCount === 1 ? "violation" : "violations";
 
     if (allPassed) {
-      console.log(`✔ ${totalBenchmarks} ${benchmarkLabel} passed, 0 ${violationLabel}`);
+      console.log(
+        `✔ ${totalBenchmarks} ${benchmarkLabel} passed, 0 ${violationLabel}`,
+      );
     } else {
       console.log(
         `✖ ${passedCount} ${benchmarkLabel} passed, ${violationCount} ${violationLabel} detected`,
@@ -377,7 +387,11 @@ async function main() {
     if (jsonStdout) {
       process.stdout.write(JSON.stringify(headResults, null, 2) + "\n");
     } else if (outputPath) {
-      fs.writeFileSync(outputPath, JSON.stringify(headResults, null, 2), "utf8");
+      fs.writeFileSync(
+        outputPath,
+        JSON.stringify(headResults, null, 2),
+        "utf8",
+      );
       console.log(`Done. Results written to ${outputPath}`);
     }
 
