@@ -116,7 +116,10 @@ of a hardcoded value:
 ```
 
 Every revision deploys each contract once, dependencies first, and commits the
-whole setup before any measured invocation. Unknown, duplicate, self or cyclic
+whole setup before any measured invocation. Each new deployment must return
+the expected deterministic contract address in its successful create receipt.
+If validation fails, the error reports the expected address and the observed
+address, when available. Unknown, duplicate, self or cyclic
 dependencies, and bindings to an undeclared dependency, are rejected before any
 side effect; a failed prerequisite aborts its dependents. A binding takes the
 dependency's committed create return value (its contract address), optionally
