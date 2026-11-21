@@ -25,9 +25,12 @@ order, so a fixture without dependencies deploys exactly as before.
 `runMeasurement` now has two phases for each revision:
 
 1. **Setup.** Every contract is uploaded and created once, in plan order, and
-   each create transaction must be confirmed `SUCCESS`. The committed create
-   return value is captured as raw ScVal XDR. When the instance already exists
-   for the deterministic address, the verified instance address is used instead.
+   each create transaction must be confirmed `SUCCESS` and return the expected
+   deterministic contract address. An unexpected or missing address stops
+   setup with a diagnostic containing the expected address and any observed
+   address. The verified create return value is captured as raw ScVal XDR.
+   When the instance already exists at the deterministic address, setup uses
+   the verified instance address.
 2. **Measurement.** Only after the whole setup has committed are invocations
    simulated, in fixture declaration order. Setup transactions are never
    measured.

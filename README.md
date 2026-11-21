@@ -116,7 +116,10 @@ of a hardcoded value:
 ```
 
 Every revision deploys each contract once, dependencies first, and commits the
-whole setup before any measured invocation. Unknown, duplicate, self or cyclic
+whole setup before any measured invocation. Each new deployment must return
+the expected deterministic contract address in its successful create receipt.
+If validation fails, the error reports the expected address and the observed
+address, when available. Unknown, duplicate, self or cyclic
 dependencies, and bindings to an undeclared dependency, are rejected before any
 side effect; a failed prerequisite aborts its dependents. A binding takes the
 dependency's committed create return value (its contract address), optionally
@@ -291,7 +294,8 @@ all eleven keys and their exact semantics.
 The CLI measures existing WASMs and writes JSON; it does not build, compare
 revisions, enforce thresholds or post comments. Provision the native helper/RPC,
 then run `node dist/cli.js <fixtures.json> --rpc-url <standalone-rpc> --output <results.json>`
-from a built checkout. See [native provisioning](docs/native-measurement.md).
+from a built checkout. Pass `--helper-path <path>` to use an existing compatible
+native helper. See [native provisioning](docs/native-measurement.md).
 
 SDK metadata is reported per contract from the Cargo workspace/lock owning each
 fixture WASM (`contract/Cargo.lock` or a root workspace `Cargo.lock`), or
