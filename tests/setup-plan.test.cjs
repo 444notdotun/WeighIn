@@ -485,10 +485,11 @@ function scenario(t, options = {}) {
   t.mock.method(rpc.Server.prototype, "getTransaction", async () => {
     if (events.at(-1)?.startsWith("create:")) {
       created.push(pendingCreate);
-      if (options.noReturn) return { status: "SUCCESS" };
       return {
         status: "SUCCESS",
-        returnValue: Address.fromString(ids[pendingCreate]).toScVal(),
+        returnValue: options.createResult
+          ? options.createResult(ids)
+          : Address.fromString(ids[pendingCreate]).toScVal(),
       };
     }
     return { status: "SUCCESS" };
@@ -609,14 +610,36 @@ test("a malformed binding path fails explicitly before the dependent invocation"
   );
 });
 
-test("a committed create without a return value cannot satisfy a binding", async (t) => {
-  const { simulated, run } = scenario(t, { noReturn: true });
-  await assert.rejects(
-    run(),
-    /the committed setup of id:callee returned no value/,
-  );
-  assert.deepEqual(simulated, []);
-});
+const accountAddress = Keypair.random().publicKey();
+for (const [label, createResult, observed] of [
+  [
+    "a different contract",
+    (ids) => Address.fromString(ids.caller).toScVal(),
+    (ids) => ids.caller,
+  ],
+  [
+    "an account address",
+    () => Address.fromString(accountAddress).toScVal(),
+    () => accountAddress,
+  ],
+  ["a non-address value", () => xdr.ScVal.scvVoid(), () => "no address"],
+  ["a missing value", () => undefined, () => "no address"],
+]) {
+  test(`a successful create returning ${label} aborts setup before simulation`, async (t) => {
+    const { ids, created, simulated, sends, run } = scenario(t, { createResult });
+    await assert.rejects(run(), (error) => {
+      assert.ok(
+        error.message.includes(
+          `Contract creation receipt address mismatch (expected=${ids.callee}, observed=${observed(ids)})`,
+        ),
+      );
+      return true;
+    });
+    assert.deepEqual(created, ["callee"]);
+    assert.equal(sends(), 2);
+    assert.deepEqual(simulated, []);
+  });
+}
 
 test("invalid dependency plans are rejected before any key file or network side effect", async () => {
   const dir = fs.mkdtempSync(
