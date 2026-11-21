@@ -1,0 +1,11 @@
+{
+  "draws": {
+    "rejected": true,
+    "message": "Local simulation disagrees with RPC at captured ledger [return-value disagreement (native_sha256: 2c2b27944b6e48ec10a7e76343143548cf54b2e97dca255599f26fbdf62d1a5c, rpc_sha256: 2038e0b606ec9046ba62958a2ba7ba09daf84e3c52deefa3a1b561f5186045e3)]; auth/random/state-dependent invocation is unsupported",
+    "parityDetails": {
+      "transactionData": false,
+      "returnValue": true,
+      "contractEvents": false
+    }
+  }
+}

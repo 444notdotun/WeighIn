@@ -27,8 +27,12 @@ Cargo workspace prevents it from joining a caller's contract workspace. Cargo, i
 WeighIn does not install them. On GitHub, the Action sources reside beside its
 bundle, independently of the caller's workspace or base worktree.
 
-For an already-built compatible executable, set `WEIGHIN_HELPER_PATH` to its
-absolute path, or use `helperPath` in `runMeasurement` options. Overrides are
+For an already-built compatible executable, pass `--helper-path <path>` to the
+CLI, set `WEIGHIN_HELPER_PATH`, or use `helperPath` in `runMeasurement` options.
+The flag takes precedence over the environment variable. Relative paths resolve
+from the working directory. A missing or nonexecutable override fails without
+trying another helper or building one. The Linux x64 and standalone protocol-28
+requirements apply to overrides. Overrides are
 validated for executable access and versioned output; the binary's SHA256 is
 recorded. Missing binaries, malformed output, host failures and unsupported
 protocols produce errors, not measurements containing zero.
@@ -55,6 +59,8 @@ The Action already does so; the CLI consumes existing WASMs.
 
 ```bash
 node dist/cli.js weighin-fixtures.json --rpc-url http://localhost:8000/rpc --output weighin-results.json
+# Reuse a compatible helper that has already been built.
+node dist/cli.js weighin-fixtures.json --helper-path ./path/to/weighin-simulation --output weighin-results.json
 ```
 
 The CLI writes measurement JSON and exits 1 on measurement failure. It remains a
@@ -133,6 +139,7 @@ Measurement and helper operations accept an optional `signal?: AbortSignal` acro
 - **Simulation and transient recovery**: `measureInvocation` aborts transient captive-core retry delays immediately upon cancellation and halts retry loops.
 - **Resource protection**: Caller-provided key files (`keyFile`) are never created, modified or deleted by the API, whether a run succeeds, fails or is cancelled. When no `keyFile` is given, the API creates a private temporary directory for the deployer key and removes it when the run finishes, fails or is cancelled, so each such run uses a fresh deployer account. Scratch files are cleaned up.
 - **Fail-closed guarantees**: Cancelled measurements throw explicit cancellation errors (`AbortError`) and never produce synthetic zero or fallback benchmarks.
+- **Action cancellation scope**: `src/cancellation.ts` handles `SIGTERM`/`SIGINT` for the Action by aborting the measurement signal, terminating tracked child processes (git, Stellar/Cargo builds, custom build commands, native helper) with `SIGTERM` then `SIGKILL`, and only afterward removing owned temporary paths. Owned paths are limited to fresh `weighin-` `mkdtemp` directories directly under the OS temporary root: the BASE worktree, the Action-owned deployer key directory and build scratch directories. The caller's HEAD checkout, caller-supplied `keyFile`, report and metadata outputs are never registered for cleanup. A cancelled run sets a nonzero exit code and reports failure; no passing benchmark or policy result is published.
 
 ## Schema migration
 

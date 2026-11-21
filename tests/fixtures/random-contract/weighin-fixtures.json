@@ -1,0 +1,26 @@
+{
+  "id": "id:random-contract-suite",
+  "contracts": [
+    {
+      "id": "id:random-contract",
+      "wasm_path": "contract/target/wasm32v1-none/release/contract_test.wasm",
+      "invocations": [
+        {
+          "id": "draws",
+          "function_name": "draws",
+          "args": [
+            {
+              "type": "u32",
+              "value": 4
+            }
+          ]
+        },
+        {
+          "id": "constant",
+          "function_name": "constant",
+          "args": []
+        }
+      ]
+    }
+  ]
+}

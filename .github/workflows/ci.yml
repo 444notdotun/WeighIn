@@ -120,8 +120,12 @@ jobs:
           stellar contract build --manifest-path contract/Cargo.toml --locked --optimize=true
           test -s contract/target/wasm32v1-none/release/contract_test.wasm
 
+      - name: Fetch locked native helper crates
+        run: cargo +1.95.0 fetch --locked --manifest-path native/simulation/Cargo.toml
+
       - name: Test measurement adapter and native source
         run: |
+          cargo +1.95.0 fetch --locked --manifest-path native/simulation/Cargo.toml
           cargo +1.95.0 fmt --check --manifest-path native/simulation/Cargo.toml
           npm test
           npm run test:native

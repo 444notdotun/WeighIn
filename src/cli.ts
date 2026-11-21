@@ -19,6 +19,7 @@ export interface CliOptions {
   fixturesPath: string;
   outputPath: string | null;
   rpcUrl: string;
+  helperPath?: string;
   jsonStdout: boolean;
   allowCrossTargetSubstitution: boolean;
 }
@@ -30,12 +31,20 @@ export function parseArgs(
   let explicitOutputFile: string | null = null;
   let jsonStdout = false;
   let rpcUrl = "http://localhost:8000/rpc";
+  let helperPath: string | undefined;
   let allowCrossTargetSubstitution = false;
 
   for (let i = 0; i < rawArgs.length; i++) {
     const arg = rawArgs[i];
     if (arg === "--rpc-url" && rawArgs[i + 1]) {
       rpcUrl = rawArgs[++i];
+    } else if (arg === "--helper-path") {
+      const target = rawArgs[i + 1];
+      if (!target?.trim() || target.startsWith("--")) {
+        throw new Error("--helper-path requires a path to an executable");
+      }
+      helperPath = target;
+      i++;
     } else if (arg === "--output" && rawArgs[i + 1]) {
       const target = rawArgs[++i];
       if (target === "-") {
@@ -78,6 +87,7 @@ export function parseArgs(
       ? null
       : explicitOutputFile || "weighin-results.json",
     rpcUrl,
+    helperPath,
     jsonStdout,
     allowCrossTargetSubstitution,
   };
@@ -92,7 +102,7 @@ async function main() {
     process.exit(1);
   }
 
-  const { fixturesPath, outputPath, rpcUrl, jsonStdout } = options;
+  const { fixturesPath, outputPath, rpcUrl, jsonStdout, helperPath } = options;
   const gitCommit = getGitCommit();
 
   // When stdout mode is requested, route diagnostic and progress logs to stderr.
@@ -150,6 +160,7 @@ async function main() {
       fixturesPath,
       gitCommit,
       rpcUrl,
+      helperPath,
       allowCrossTargetSubstitution: options.allowCrossTargetSubstitution,
     });
 

@@ -1,6 +1,6 @@
 import * as core from "@actions/core";
-import * as exec from "@actions/exec";
 import { buildContracts } from "./build";
+import { trackedExec } from "./cancellation";
 
 /**
  * Parse an optional boolean Action input.
@@ -39,7 +39,10 @@ export async function buildForRevision(
       const env = rustToolchain
         ? { ...process.env, RUSTUP_TOOLCHAIN: rustToolchain }
         : (process.env as Record<string, string>);
-      await exec.exec("sh", ["-c", buildCommand], { cwd: worktreeRoot, env });
+      await trackedExec("sh", ["-c", buildCommand], {
+        cwd: worktreeRoot,
+        env,
+      });
     } catch (error: any) {
       throw new Error(`Custom build command failed: ${error.message}`);
     }
