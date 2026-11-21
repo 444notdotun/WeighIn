@@ -307,6 +307,23 @@ then run `node dist/cli.js <fixtures.json> --rpc-url <standalone-rpc> --output <
 from a built checkout. Pass `--helper-path <path>` to use an existing compatible
 native helper. See [native provisioning](docs/native-measurement.md).
 
+Run `node dist/cli.js --help` (or `-h`) for supported usage and
+`node dist/cli.js --version` for the installed package version. Both are
+standalone, offline invocations: they exit successfully without reading
+fixtures, probing Git, contacting RPC or provisioning the native helper, and
+they write no result file.
+
+The argument grammar is `weighin [options] [fixtures.json] [results.json]`.
+Zero positionals use the documented defaults, the first positional selects the
+fixtures file and the second selects the legacy positional output path.
+`--rpc-url <url>` and `--output <path>` accept exactly one value and may appear
+in any order (`--output -` writes JSON to stdout). A token beginning with `--`
+is never treated as an option value, and `--` ends option parsing so positional
+paths may begin with a dash. Unknown options, missing values, duplicate scalar
+options (`--rpc-url`, `--output`, `--helper-path`), extra positionals and
+combining a positional output with `--output` are rejected with a usage
+diagnostic before any fixture, Git or RPC work.
+
 SDK metadata is reported per contract from the Cargo workspace/lock owning each
 fixture WASM (`contract/Cargo.lock` or a root workspace `Cargo.lock`), or
 `"unknown"` when no owning lock can be established; multiple declared versions
