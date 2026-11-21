@@ -24,85 +24,209 @@ export interface CliOptions {
   allowCrossTargetSubstitution: boolean;
 }
 
+export type CliCommand =
+  | { kind: "help" }
+  | { kind: "version" }
+  | { kind: "measure"; options: CliOptions };
+
+const DEFAULT_FIXTURES_PATH = "weighin-fixtures.json";
+const DEFAULT_OUTPUT_PATH = "weighin-results.json";
+const DEFAULT_RPC_URL = "http://localhost:8000/rpc";
+
+export const USAGE = "Usage: weighin [options] [fixtures.json] [results.json]";
+
+export const HELP_TEXT = `${USAGE}
+
+Measure Soroban contract resource usage from an existing fixtures file.
+The command only measures: it does not build contracts, compare BASE/HEAD
+revisions, enforce thresholds or post comments.
+
+Positional arguments:
+  fixtures.json         Fixtures file to measure (default: ${DEFAULT_FIXTURES_PATH})
+  results.json          Results file to write (default: ${DEFAULT_OUTPUT_PATH})
+
+Options:
+  --rpc-url <url>       Standalone Stellar RPC endpoint (default: ${DEFAULT_RPC_URL})
+  --output <path>       Results file, or - for JSON on stdout (default: ${DEFAULT_OUTPUT_PATH})
+  --helper-path <path>  Use an existing compatible native simulation helper
+  --json-stdout         Write JSON results to stdout instead of a file
+  --stdout              Alias for --json-stdout
+  --allow-cross-target-substitution
+                        Allow cross-target WASM substitution
+  --                    Treat remaining arguments as positional paths
+  -h, --help            Show this help and exit
+  --version             Show the installed package version and exit`;
+
+function readPackageVersion(): string {
+  const packagePath = path.resolve(__dirname, "..", "package.json");
+  const metadata = JSON.parse(fs.readFileSync(packagePath, "utf8")) as {
+    version?: unknown;
+  };
+  if (typeof metadata.version !== "string" || !metadata.version.trim()) {
+    throw new Error("Installed package metadata has no version");
+  }
+  return metadata.version;
+}
+
 export function parseArgs(
   rawArgs: string[] = process.argv.slice(2),
-): CliOptions {
+): CliCommand {
   let fixturesPath: string | null = null;
-  let explicitOutputFile: string | null = null;
+  let positionalOutputPath: string | null = null;
+  let optionOutputPath: string | null = null;
+  let positionalCount = 0;
   let jsonStdout = false;
-  let rpcUrl = "http://localhost:8000/rpc";
+  let rpcUrl = DEFAULT_RPC_URL;
   let helperPath: string | undefined;
   let allowCrossTargetSubstitution = false;
+  let endOfOptions = false;
+  const seenScalarOptions = new Set<string>();
 
   for (let i = 0; i < rawArgs.length; i++) {
     const arg = rawArgs[i];
-    if (arg === "--rpc-url" && rawArgs[i + 1]) {
-      rpcUrl = rawArgs[++i];
-    } else if (arg === "--helper-path") {
-      const target = rawArgs[i + 1];
-      if (!target?.trim() || target.startsWith("--")) {
-        throw new Error("--helper-path requires a path to an executable");
+
+    if (!endOfOptions && arg === "--") {
+      endOfOptions = true;
+      continue;
+    }
+
+    if (!endOfOptions) {
+      // A token beginning with -- is never an option value.
+      const nextValue = (option: string, message?: string): string => {
+        const value = rawArgs[i + 1];
+        if (value === undefined || value.startsWith("--") || !value.trim()) {
+          throw new Error(message ?? `${option} requires a value`);
+        }
+        i++;
+        return value;
+      };
+      const markScalar = (option: string): void => {
+        if (seenScalarOptions.has(option)) {
+          throw new Error(`Duplicate option: ${option}`);
+        }
+        seenScalarOptions.add(option);
+      };
+
+      if (arg === "--help" || arg === "-h") {
+        return { kind: "help" };
       }
-      helperPath = target;
-      i++;
-    } else if (arg === "--output" && rawArgs[i + 1]) {
-      const target = rawArgs[++i];
-      if (target === "-") {
-        jsonStdout = true;
-      } else {
-        explicitOutputFile = target;
+      if (arg === "--version") {
+        return { kind: "version" };
       }
-    } else if (arg === "--stdout" || arg === "--json-stdout") {
-      jsonStdout = true;
-    } else if (arg === "--allow-cross-target-substitution") {
-      allowCrossTargetSubstitution = true;
-    } else if (!arg.startsWith("--")) {
-      // Positional argument
-      if (fixturesPath === null) {
-        fixturesPath = arg;
-      } else if (explicitOutputFile === null) {
-        if (arg === "-") {
+      if (arg === "--rpc-url") {
+        markScalar(arg);
+        rpcUrl = nextValue(arg);
+        continue;
+      }
+      if (arg === "--output") {
+        markScalar(arg);
+        const target = nextValue(arg);
+        if (target === "-") {
           jsonStdout = true;
         } else {
-          explicitOutputFile = arg;
+          optionOutputPath = target;
         }
+        continue;
+      }
+      if (arg === "--helper-path") {
+        markScalar(arg);
+        helperPath = nextValue(
+          arg,
+          "--helper-path requires a path to an executable",
+        );
+        continue;
+      }
+      if (arg === "--stdout" || arg === "--json-stdout") {
+        jsonStdout = true;
+        continue;
+      }
+      if (arg === "--allow-cross-target-substitution") {
+        allowCrossTargetSubstitution = true;
+        continue;
+      }
+      if (arg.startsWith("--")) {
+        throw new Error(`Unknown option: ${arg}`);
+      }
+    }
+
+    // Track positionals explicitly instead of inferring them from a value.
+    positionalCount++;
+    if (positionalCount === 1) {
+      fixturesPath = arg;
+    } else if (positionalCount === 2) {
+      if (arg === "-") {
+        jsonStdout = true;
       } else {
-        throw new Error(`Unexpected argument: ${arg}`);
+        positionalOutputPath = arg;
       }
     } else {
-      throw new Error(`Unknown option: ${arg}`);
+      throw new Error(`Unexpected argument: ${arg}`);
     }
   }
 
-  // Reject ambiguous combinations before network side effects
-  if (jsonStdout && explicitOutputFile !== null) {
+  // Reject ambiguous combinations before fixture, Git or network side effects.
+  if (positionalOutputPath !== null && optionOutputPath !== null) {
+    throw new Error(
+      "Ambiguous output configuration: cannot specify an output file both positionally and with --output",
+    );
+  }
+  if (
+    jsonStdout &&
+    (positionalOutputPath !== null || optionOutputPath !== null)
+  ) {
     throw new Error(
       "Ambiguous output configuration: cannot specify both JSON stdout mode and an output file path",
     );
   }
 
+  const outputFile = optionOutputPath ?? positionalOutputPath;
   return {
-    fixturesPath: fixturesPath || "weighin-fixtures.json",
-    outputPath: jsonStdout
-      ? null
-      : explicitOutputFile || "weighin-results.json",
-    rpcUrl,
-    helperPath,
-    jsonStdout,
-    allowCrossTargetSubstitution,
+    kind: "measure",
+    options: {
+      fixturesPath: fixturesPath ?? DEFAULT_FIXTURES_PATH,
+      outputPath: jsonStdout ? null : (outputFile ?? DEFAULT_OUTPUT_PATH),
+      rpcUrl,
+      helperPath,
+      jsonStdout,
+      allowCrossTargetSubstitution,
+    },
   };
 }
 
 async function main() {
-  let options: CliOptions;
+  let command: CliCommand;
   try {
-    options = parseArgs();
+    command = parseArgs();
   } catch (err: any) {
     console.error(err.message);
+    console.error(USAGE);
     process.exit(1);
   }
 
-  const { fixturesPath, outputPath, rpcUrl, jsonStdout, helperPath } = options;
+  // Help and version are standalone, offline invocations: they run before any
+  // fixture read, Git probe, RPC request or helper provisioning.
+  if (command.kind === "help") {
+    process.stdout.write(`${HELP_TEXT}\n`);
+    return;
+  }
+  if (command.kind === "version") {
+    try {
+      process.stdout.write(`${readPackageVersion()}\n`);
+    } catch (err: any) {
+      console.error(err.message);
+      process.exit(1);
+    }
+    return;
+  }
+
+  const {
+    fixturesPath,
+    outputPath,
+    rpcUrl,
+    jsonStdout,
+    helperPath,
+    allowCrossTargetSubstitution,
+  } = command.options;
   const gitCommit = getGitCommit();
 
   // When stdout mode is requested, route diagnostic and progress logs to stderr.
@@ -161,7 +285,7 @@ async function main() {
       gitCommit,
       rpcUrl,
       helperPath,
-      allowCrossTargetSubstitution: options.allowCrossTargetSubstitution,
+      allowCrossTargetSubstitution,
     });
 
     if (jsonStdout) {
