@@ -7,6 +7,10 @@ bundled/
 target/
 contract/target/
 
+# Coverage reports and vitest artifacts
+coverage/
+.vitest/
+
 # Weighin runtime files
 .weighin-temp-key
 weighin-results.json
@@ -19,6 +23,11 @@ provenance-manifest.json
 # Misc
 *.tar.bz2
 *.tar.gz
+
+# Local configuration files and caches
+.env*.local
+.env*.json
+.cache/
 
 # Local agent instructions and operational records
 .codex/
