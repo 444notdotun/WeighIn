@@ -78,7 +78,7 @@ test("CLI rejects invalid usage before fixture or network side effects", (t) => 
     },
     {
       args: ["one.json", "two.json", "three.json"],
-      message: /Unexpected argument: three\.json/,
+      message: /Output:   three\.json$/,
     },
     {
       args: ["--rpc-url", "a", "--rpc-url", "b"],
@@ -162,6 +162,6 @@ test("CLI treats -- as end of options for dash-prefixed paths", (t) => {
   assert.equal(result.status, 1);
   // --help was parsed as the fixture path, not as the help command.
   assert.match(result.stdout, /^Fixtures: --help$/m);
-  assert.match(result.stdout, /^Output:\s+dash-results\.json$/m);
+  assert.match(result.stdout, /^Output:\s+weighin-results\.json$/m);
   assert.equal(fs.existsSync(path.join(cwd, "dash-results.json")), false);
 });
