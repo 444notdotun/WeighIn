@@ -6,7 +6,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
-const { Account, Keypair, rpc } = require("@stellar/stellar-sdk");
+const { Account, Address, Keypair, rpc } = require("@stellar/stellar-sdk");
 const { runMeasurement } = require("../dist/measurement");
 
 const H1 = "1".repeat(64);
@@ -60,6 +60,7 @@ function scenario(t, options = {}) {
 
   const order = [];
   const state = { send: 0, poll: 0 };
+  let createAddress;
 
   t.mock.method(console, "log", () => {});
   t.mock.method(console, "warn", () => {});
@@ -77,8 +78,9 @@ function scenario(t, options = {}) {
     order.push("getAccount");
     return new Account(address, "1");
   });
-  t.mock.method(rpc.Server.prototype, "getLedgerEntries", async () => {
+  t.mock.method(rpc.Server.prototype, "getLedgerEntries", async (key) => {
     order.push("getLedgerEntries");
+    createAddress = Address.fromScAddress(key.contractData().contract());
     return { entries: [] };
   });
   t.mock.method(rpc.Server.prototype, "prepareTransaction", async () => {
@@ -93,7 +95,14 @@ function scenario(t, options = {}) {
   t.mock.method(rpc.Server.prototype, "getTransaction", async (hash) => {
     order.push("getTransaction");
     state.poll++;
-    return { status: options.poll ? options.poll(hash) : "SUCCESS" };
+    const status = options.poll ? options.poll(hash) : "SUCCESS";
+    return {
+      status,
+      returnValue:
+        status === "SUCCESS" && hash === H2
+          ? createAddress.toScVal()
+          : undefined,
+    };
   });
   t.mock.method(
     require("../dist/simulation"),
@@ -221,12 +230,13 @@ for (const [label, response] of [
 }
 
 test("create PENDING that confirms as FAILED preserves the failure", async (t) => {
-  const { state, run } = scenario(t, {
+  const { order, state, run } = scenario(t, {
     sends: [send("PENDING", H1), send("PENDING", H2)],
     poll: (hash) => (hash === H2 ? "FAILED" : "SUCCESS"),
   });
   await assert.rejects(run(), /contract creation transaction/);
   assert.equal(state.poll, 2);
+  assert.ok(!order.includes("simulateTransaction"));
 });
 
 test("an unanswered accepted transaction exhausts the unchanged 30-poll budget", async (t) => {
