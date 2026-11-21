@@ -62,6 +62,30 @@ npm run build
 bash scripts/start-local-network.sh
 ```
 
+The defaults are `stellar-quickstart` and host port `8000`. Give each
+concurrent run its own Docker name and unused host port. Names start with a
+letter or digit and may also contain dots, underscores, and hyphens. Ports
+are decimal integers from 1 through 65535, without leading zeros.
+
+```bash
+bash scripts/start-local-network.sh --name weighin-proof-a --port 18080 &
+bash scripts/start-local-network.sh --name weighin-proof-b --port 18081 &
+wait
+```
+
+Use the reported RPC URL for each run, for example
+`http://localhost:18080/rpc` and `http://localhost:18081/rpc`. The startup
+script uses that same URL for health, funding, and ledger readiness.
+Each sidecar keeps its own ledger state and listens on port `8000` inside the
+container. The ownership and replacement rules apply to the selected name.
+Stop successful runs individually with `docker stop weighin-proof-a` and
+`docker stop weighin-proof-b`.
+
+The benchmark CI job starts two pinned sidecars concurrently and verifies
+that each RPC exposes only its own funded probe account on protocol 28.
+It uploads the inputs, command exits, raw RPC responses, and checksum as the
+`weighin-sidecar-isolation` artifact.
+
 The example external workflow polls `getHealth`; the bundled Action independently
 checks its real deployer's funding/inclusion. External consumers do not need the
 repository's disposable-account probe. The account deadline is not an overall

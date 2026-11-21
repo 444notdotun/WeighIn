@@ -1,9 +1,9 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),path=require('node:path');
 const fs=require('node:fs'),os=require('node:os');
 const {spawn,spawnSync}=require('node:child_process');
-function startup(mode){const result=spawnSync(process.execPath,['--require',path.join(__dirname,'support/network-startup-hook.cjs'),
-  path.resolve(__dirname,'../scripts/wait-for-local-network.cjs')],{encoding:'utf8',timeout:10000,
-  env:{...process.env,WEIGHIN_STARTUP_UNIT_MODE:mode}});assert.ifError(result.error);return result;}
+function startup(mode, rpcUrl){const result=spawnSync(process.execPath,['--require',path.join(__dirname,'support/network-startup-hook.cjs'),
+  path.resolve(__dirname,'../scripts/wait-for-local-network.cjs'), ...(rpcUrl ? [rpcUrl] : [])],{encoding:'utf8',timeout:10000,
+  env:{...process.env,WEIGHIN_STARTUP_UNIT_MODE:mode,MOCK_RPC_URL:rpcUrl || 'http://localhost:8000/rpc'}});assert.ifError(result.error);return result;}
 for(const mode of ['unhealthy','metadata-only'])test(`startup fails closed for ${mode} RPC`,()=>{
   const r=startup(mode);assert.equal(r.status,1);assert.match(r.stderr,/RPC readiness failed within 120s/);
   assert.doesNotMatch(r.stdout,/network is ready|Funding deployer/);
@@ -15,6 +15,13 @@ test('healthy RPC with persistent Friendbot failure does not report network read
 test('startup reports readiness only after healthy RPC and account inclusion',()=>{
   const r=startup('ready');assert.equal(r.status,0,r.stdout+r.stderr);
   assert.match(r.stdout,/confirmed in RPC/);assert.match(r.stdout,/network is ready/);
+});
+
+test('readiness uses the configured port for RPC, Friendbot and its success message', () => {
+  const rpcUrl = 'http://localhost:18081/rpc';
+  const result = startup('ready', rpcUrl);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.ok(result.stdout.includes(`RPC reads at ${rpcUrl}`));
 });
 
 const MOCK_CONTAINER_ID='4f0c2a9e8b1d0123456789abcdef0123456789abcdef0123456789abcdef0123';
@@ -33,6 +40,7 @@ if(args[0]==='ps'){
   if(process.env.MOCK_INSPECT_FAILURE==='1')process.exit(1);
   process.stdout.write(process.env.MOCK_EXISTING==='owned'?'weighin-start-local-network\\n':'\\n');
 }else if(args[0]==='run'){
+  if(process.env.MOCK_PORT_CONFLICT==='1'){process.stderr.write('port is already allocated\\n');process.exit(125);}
   if(process.env.MOCK_RUN_ID!=='')process.stdout.write((process.env.MOCK_RUN_ID||'${MOCK_CONTAINER_ID}')+'\\n');
 }else if(args[0]==='logs'){
   if(process.env.MOCK_LOGS_FAILURE==='1')process.exit(1);
@@ -43,6 +51,7 @@ if(args[0]==='ps'){
 `);
   fs.writeFileSync(nodePath,`#!${process.execPath}
 if(process.argv[2]==='-e')process.exit(0);
+process.stdout.write('readiness endpoint: '+process.argv[3]+'\\n');
 if(process.env.MOCK_READINESS==='hang')setTimeout(()=>process.exit(1),1500);
 else if(process.env.MOCK_READINESS==='fail'){process.stderr.write('Account readiness failed within 120s\\n');process.exit(1);}
 else process.stdout.write('network is ready\\n');
@@ -54,9 +63,9 @@ else process.stdout.write('network is ready\\n');
   return {env,readCalls};
 }
 
-function runStartup(existing='none',extraEnv={}){
+function runStartup(existing='none',extraEnv={},args=[]){
   const tools=mockStartupTools();
-  const result=spawnSync('bash',[path.resolve(__dirname,'../scripts/start-local-network.sh')],{
+  const result=spawnSync('bash',[path.resolve(__dirname,'../scripts/start-local-network.sh'),...args],{
     encoding:'utf8',timeout:10000,env:tools.env({...extraEnv,MOCK_EXISTING:existing})
   });
   assert.ifError(result.error);
@@ -69,7 +78,42 @@ test('startup replaces its owned disposable sidecar and labels the new container
   assert.ok(calls.some(args=>args[0]==='rm'&&args.includes('-f')));
   const run=calls.find(args=>args[0]==='run');
   assert.ok(run);
+  assert.ok(run.includes('stellar-quickstart'));
+  assert.ok(run.includes('8000:8000'));
+  assert.match(result.stdout,/readiness endpoint: http:\/\/localhost:8000\/rpc/);
   assert.ok(run.includes('io.weighin.managed-by=weighin-start-local-network'));
+});
+
+test('custom sidecar options select an exact name, replace only the inspected ID, and keep the container port', () => {
+  const {result, calls} = runStartup('owned', {}, ['--name', 'proof.a', '--port', '18081']);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.ok(calls[0].includes('name=^/proof\\.a$'));
+  assert.equal(calls[1].at(-1), 'mock-container');
+  assert.deepEqual(calls[2], ['rm', '-f', 'mock-container']);
+  assert.ok(calls[3].includes('proof.a'));
+  assert.ok(calls[3].includes('18081:8000'));
+  assert.ok(result.stdout.includes('readiness endpoint: http://localhost:18081/rpc'));
+});
+
+for (const args of [
+  ['--name'], ['--name', ''], ['--name', 'a/b'], ['--name', 'a*'],
+  ['--port'], ['--port', ''], ['--port', '0'], ['--port', '65536'],
+  ['--port', '08000'], ['--port', '8e3'], ['--port', '8000:8000'], ['--unknown'],
+]) {
+  test(`invalid startup arguments fail before Docker: ${JSON.stringify(args)}`, () => {
+    const {result, calls} = runStartup('owned', {}, args);
+    assert.equal(result.status, 2);
+    assert.match(result.stderr, /Error:/);
+    assert.deepEqual(calls, []);
+  });
+}
+
+test('a port collision preserves the other sidecar and skips readiness', () => {
+  const {result, calls} = runStartup('none', {MOCK_PORT_CONFLICT:'1'}, ['--name', 'proof-b', '--port', '18081']);
+  assert.equal(result.status, 125);
+  assert.match(result.stderr, /port is already allocated/);
+  assert.doesNotMatch(result.stdout, /readiness endpoint/);
+  assert.deepEqual(calls.map(args => args[0]), ['ps', 'run']);
 });
 
 test('startup preserves an unowned name collision with actionable guidance',()=>{

@@ -41,6 +41,6 @@ async function main() {
   // Only the disposable public key is used; no seed is saved or logged.
   await ensureAccountReady(rpcUrl, Keypair.random().publicKey());
   await waitForComputeConfig(deadline);
-  console.log('Stellar Quickstart local network is ready for account funding and RPC reads.');
+  console.log(`Stellar Quickstart local network is ready for account funding and RPC reads at ${rpcUrl}.`);
 }
 main().catch(error => { console.error(error.message); process.exitCode = 1; });
