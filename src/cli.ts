@@ -160,11 +160,15 @@ export function parseArgs(
     } else if (positionalCount === 2) {
       if (arg === "-") {
         jsonStdout = true;
-      } else if (positionalCount === 2 && !baseFixturesPath) {
-        // Second positional is treated as base fixtures path for comparison
-        baseFixturesPath = arg;
-      } else {
+      } else if (!baseFixturesPath) {
+        // Second positional is treated as output path when no base comparison
+        // is configured; it falls back to baseFixturesPath only when a base
+        // fixtures path is explicitly needed for comparison mode.
         positionalOutputPath = arg;
+      } else {
+        // baseFixturesPath already set (comparison mode); second positional is
+        // ignored for output but still tracked as a positional argument.
+        ;
       }
     } else if (positionalCount === 3 && baseFixturesPath) {
       // Third positional is the output path
