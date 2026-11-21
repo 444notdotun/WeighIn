@@ -344,6 +344,66 @@ export const FixturesSpecSchema = z
   })
   .strict();
 
+type JsonSchemaObject = Record<string, unknown>;
+
+/** Return the editor-facing schema from the same Zod contract used at runtime. */
+export function getFixturesJsonSchema(): JsonSchemaObject {
+  const schema = z.toJSONSchema(FixturesSpecSchema, {
+    unrepresentable: "any",
+  }) as JsonSchemaObject;
+  const properties = schema.properties as JsonSchemaObject;
+  const contracts = properties.contracts as JsonSchemaObject;
+  const contractItem = contracts.items as JsonSchemaObject;
+  const invocationItems = (contractItem.properties as JsonSchemaObject)
+    .invocations as JsonSchemaObject;
+  const invocationItem = invocationItems.items as JsonSchemaObject;
+  const nonBlank = (node: JsonSchemaObject | undefined): void => {
+    if (!node) return;
+    node.minLength = 1;
+    node.pattern = "\\S";
+  };
+  nonBlank(properties.id as JsonSchemaObject | undefined);
+  const contractProperties = contractItem.properties as JsonSchemaObject;
+  nonBlank(contractProperties.id as JsonSchemaObject | undefined);
+  const dependsOn = contractProperties.depends_on as
+    JsonSchemaObject | undefined;
+  if (dependsOn) nonBlank(dependsOn.items as JsonSchemaObject | undefined);
+  const invocationProperties = invocationItem.properties as JsonSchemaObject;
+  nonBlank(invocationProperties.id as JsonSchemaObject | undefined);
+  const args = (invocationItem.properties as JsonSchemaObject)
+    .args as JsonSchemaObject;
+  const literal = z.toJSONSchema(InvocationArgSchema, {
+    unrepresentable: "any",
+  }) as JsonSchemaObject;
+  const binding = z.toJSONSchema(BoundInvocationArgSchema, {
+    unrepresentable: "any",
+  }) as JsonSchemaObject;
+  delete literal.$schema;
+  delete binding.$schema;
+  const bindingProperties = binding.properties as JsonSchemaObject;
+  const bindingObject = bindingProperties.binding as JsonSchemaObject;
+  nonBlank(
+    (bindingObject.properties as JsonSchemaObject).contract as JsonSchemaObject,
+  );
+  args.items = { anyOf: [literal, binding] };
+  schema.$id =
+    "https://raw.githubusercontent.com/WeighInNG/WeighIn/main/docs/schemas/weighin-fixtures.schema.json";
+  schema.title = "WeighIn fixture declarations";
+  schema.description =
+    "Input contract for weighin-fixtures.json. Invocation values are checked by the matching runtime argument validator.";
+  schema["x-weighin-identities"] = {
+    fixture:
+      "Explicit top-level id becomes fixture_id; otherwise the normalized relative fixture path becomes path:<path>.",
+    contract:
+      "Explicit contract id becomes logical_id; otherwise normalized wasm_path becomes wasm:<path>.",
+    invocation:
+      "Explicit invocation id becomes case_id; otherwise canonicalized typed arguments become args:<json>.",
+  };
+  return schema;
+}
+
+export const WEIGHIN_FIXTURES_JSON_SCHEMA = getFixturesJsonSchema();
+
 export type FixturesSpec = z.infer<typeof FixturesSpecSchema>;
 
 // ---------------------------------------------------------------------------

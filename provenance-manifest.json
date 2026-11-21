@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "purpose": "verifiable WeighIn package build provenance",
-  "source_revision": "4d5c5a2ce5c82eb6f3e40d5c5298d6cfa7312c82",
+  "source_revision": "7cc72b6301a078201d408200eb20ebd045e30bf4",
   "tools": {
-    "node": "v24.22.2",
-    "npm": "11.19.1"
+    "node": "v22.23.5",
+    "npm": "10.9.9"
   },
   "inputs": [
     {
@@ -13,11 +13,11 @@
     },
     {
       "path": "bundled/comment-action.js",
-      "sha256": "25b5252d0ea73ad28ca1fffe03a8b1618b45be8389abd1e77efd8c300fa38b08"
+      "sha256": "70c9da02d591246a5020f2d7223a9132f3aebd97e97c4659b665d9d4ebca1ab5"
     },
     {
       "path": "bundled/index.js",
-      "sha256": "b40d4bd3d6973b8bdde32c364eae452ffacc91e35624cb451ce1c88d54c82988"
+      "sha256": "82edbf49c02561ca0546eb4ad89f3ad94aa5d62179e18bb5058b5dc0fa3af8cb"
     },
     {
       "path": "native/simulation/Cargo.lock",
@@ -37,7 +37,7 @@
     },
     {
       "path": "package.json",
-      "sha256": "d3d5133289aacbd22b1e2cbadb4763e2768701a25710c43b907329ebcce37f59"
+      "sha256": "c5e9fc823498b16e81f596d351f97c6fc3c04b2b977c738216e94a34efa9ce0b"
     },
     {
       "path": "src/account.ts",
@@ -69,7 +69,7 @@
     },
     {
       "path": "src/comment-action.ts",
-      "sha256": "fc84904ba99d289ed8c9f2a8336fe068af14b33ba8be1a43338aa2638d5c8df9"
+      "sha256": "13eecfff222f3bf4454a4a5c61040200bc3da8150e1f59796f6df89a1cd96d21"
     },
     {
       "path": "src/comment.ts",
@@ -77,7 +77,7 @@
     },
     {
       "path": "src/config.ts",
-      "sha256": "637bd5ebb7ae9333d4857253817717087e7565e25f77a594e29a2f8d0b301007"
+      "sha256": "d1a3789216c892a85db4302a11395d89d9c77931df1370d286879eaae4f8b3be"
     },
     {
       "path": "src/dependency-inventory.ts",
@@ -105,7 +105,7 @@
     },
     {
       "path": "src/measurement.ts",
-      "sha256": "2b44533d9c984132fe09f56f5171f4dfed0ffb356e9eddcb3b5485e4458bd8f5"
+      "sha256": "6240208516fe22c36b0cb470702a43c0b4052710d79ead7c832025845814ee81"
     },
     {
       "path": "src/network.ts",
@@ -157,7 +157,7 @@
     },
     {
       "path": "src/threshold.ts",
-      "sha256": "7b952546183b565f7b182dbc4d1a9773145588f1a791a094c33ca47962cc4992"
+      "sha256": "3b66990577525c526f4f841c6f844be73fa1663758109ecff4d04bf3a5c66671"
     }
   ]
 }
