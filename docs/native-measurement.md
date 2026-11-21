@@ -269,6 +269,8 @@ TTL metadata is unavailable, the run fails with an error naming the entry, the
 latest ledger, its live-until ledger and the required window. The check runs
 before any transaction is prepared or any simulation starts. WeighIn does not
 extend TTLs, redeploy over the existing contract, or restore archived state, so
-caller-owned ledger state is never modified to hide an expiry. To proceed, extend
-the TTL yourself, or use a different deployer key (`keyFile`), which yields a new
-contract ID.
+caller-owned ledger state is never modified to hide an expiry. The
+[temporary-entry TTL proof](temporary-ttl.md) records the live, naturally
+expired and defensive archived-control outcomes for one temporary entry. To
+proceed, extend the TTL yourself, or use a different deployer key (`keyFile`),
+which yields a new contract ID.

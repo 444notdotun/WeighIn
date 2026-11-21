@@ -1,0 +1,27 @@
+{
+  "live": {
+    "accepted": true,
+    "cpu_instructions_consumed": 303331,
+    "memory_bytes_consumed": 1127031,
+    "retval_xdr": "AAAAAwAAACo=",
+    "ledger": 2930,
+    "input_sha256": "0636a051550df8bc28e7f47d9e52aad2d8b35831dc21abebadbd1975f826a17f"
+  },
+  "natural_expiry": {
+    "live_until": 3649,
+    "observed_absent_at_ledger": 3650,
+    "entry_count": 0
+  },
+  "expired_composed": {
+    "rejected": true,
+    "exit_status": 1,
+    "message": "archived ledger state is unsupported",
+    "header_ledger": 3650,
+    "entry_live_until": 3649
+  },
+  "invalid_header": {
+    "rejected": true,
+    "exit_status": 1,
+    "message": "Invalid symbol 45, offset 3.: Invalid symbol 45, offset 3."
+  }
+}

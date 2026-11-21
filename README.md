@@ -330,6 +330,9 @@ event and return attribution.
 [Bounded random-contract parity](docs/random-contract.md) records a real
 PRNG-dependent case being rejected by return-value parity while a deterministic
 control in the same contract still matches.
+[Temporary-entry TTL](docs/temporary-ttl.md) records live acceptance, natural
+expiry as RPC absence, and an archived rejection control that advances only the
+ledger header without editing TTL fields.
 
 ## Known Limitations
 

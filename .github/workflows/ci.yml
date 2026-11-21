@@ -102,6 +102,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-simulation-helper-1.95.0-x86_64-unknown-linux-gnu-
 
+      - name: Fetch locked native helper crates
+        run: cargo +1.95.0 fetch --locked --manifest-path native/simulation/Cargo.toml
+
       - name: Install Node dependencies
         run: npm ci
 
