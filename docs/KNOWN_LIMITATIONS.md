@@ -39,6 +39,11 @@ see [Evidence](EVIDENCE.md), [metric provenance](metric-provenance.md) and
 | Endpoint diagnostics | Shape-based redaction only | CLI/Action/transport render a sanitized endpoint: userinfo stripped, query values redacted, fragment dropped, malformed input replaced with `[invalid endpoint]`. Not general-purpose DLP: secrets embedded in the path, response bodies or unrelated text are not guaranteed to be removed. Requests still use the unchanged endpoint |
 | External-project coverage | Validated within a bounded scope | [Hosted Soroban Forge proof](hosted-soroban-forge.md) covers the empty participant view in a permitted WeighInNG fork. Funded settlement, populated pagination, deposit/release and upstream adoption are not proven |
 
+The [funded transfer experiment](token-transfer.md) supplies local trustlines
+and balances through committed setup transactions. Its measurement still uses
+recording authorization. A separate signed transfer verifies the
+source-account authorization path for that fixture on standalone protocol 28.
+
 ## Dependency audit
 
 See [dependency security review](DEPENDENCY_SECURITY.md) for the dated npm audit,

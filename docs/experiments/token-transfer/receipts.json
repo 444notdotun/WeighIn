@@ -1,0 +1,37 @@
+[
+  {
+    "label": "trustline",
+    "hash": "1b03be392f7627f943bf2c89b6c0e85c3fbe5be2e292f266acc5a5d44af1b99e",
+    "ledger": 104,
+    "status": "SUCCESS",
+    "return_xdr": null
+  },
+  {
+    "label": "trustline",
+    "hash": "6a1372b77c50fa351b0eae7109f92939b36b42097961022330b6f4d3f6782002",
+    "ledger": 105,
+    "status": "SUCCESS",
+    "return_xdr": null
+  },
+  {
+    "label": "fund-token-balances",
+    "hash": "0f4f8f7a83a16108bd1a38e86e2e4987f11b2a3565625df68c377943a7678f9d",
+    "ledger": 106,
+    "status": "SUCCESS",
+    "return_xdr": null
+  },
+  {
+    "label": "deploy-asset",
+    "hash": "a40b5fdfc1cb3be76699db91410f7b32516b148e8393a035764776daa9df75d8",
+    "ledger": 107,
+    "status": "SUCCESS",
+    "return_xdr": "AAAAEgAAAAGOH/8b2442cZ55qrUAuamyc+wWR6NvXVvRRqfB9zRsDw=="
+  },
+  {
+    "label": "signed-transfer",
+    "hash": "8d070d0a12e05da5183c47ffd30d1b17ea7224d466d066fa56ac42bcf66bc6ac",
+    "ledger": 120,
+    "status": "SUCCESS",
+    "return_xdr": "AAAAAQ=="
+  }
+]

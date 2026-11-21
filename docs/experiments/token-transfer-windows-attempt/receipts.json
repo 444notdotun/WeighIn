@@ -1,0 +1,30 @@
+[
+  {
+    "label": "trustline",
+    "hash": "414de7ec5a2197bf2603755e9dfda56a7d8f0e9380f9f11472ce94cf72f1ce7a",
+    "ledger": 1315,
+    "status": "SUCCESS",
+    "return_xdr": null
+  },
+  {
+    "label": "trustline",
+    "hash": "aa71382f589c464dd796542139632a885a81481d027ccd845d9861b7cca5df66",
+    "ledger": 1317,
+    "status": "SUCCESS",
+    "return_xdr": null
+  },
+  {
+    "label": "fund-token-balances",
+    "hash": "a797ad70d34ec57afd0dc84a7926853014d71ffcc5d1c25a56ffadea84a4b562",
+    "ledger": 1318,
+    "status": "SUCCESS",
+    "return_xdr": null
+  },
+  {
+    "label": "deploy-asset",
+    "hash": "7a250ac2882eb13ae20f18338479c2d14d401af0938be2843013861acda2a7ee",
+    "ledger": 1319,
+    "status": "SUCCESS",
+    "return_xdr": "AAAAEgAAAAGOH/8b2442cZ55qrUAuamyc+wWR6NvXVvRRqfB9zRsDw=="
+  }
+]
