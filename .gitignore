@@ -1,6 +1,7 @@
 # Node
 node_modules/
 dist/
+bundled/
 
 # Rust build artifacts
 target/
@@ -11,6 +12,9 @@ contract/target/
 weighin-results.json
 weighin-report.md
 pr-metadata.json
+
+# Generated provenance manifest
+provenance-manifest.json
 
 # Misc
 *.tar.bz2
