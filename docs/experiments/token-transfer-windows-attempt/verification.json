@@ -1,0 +1,5 @@
+{
+  "status": "FAILED",
+  "exit": 1,
+  "message": "Native simulation currently supports Linux x64 only"
+}
