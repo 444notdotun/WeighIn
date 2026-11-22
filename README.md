@@ -88,6 +88,8 @@ contract interface. The path is relative to the fixture file. The default
 builder finds the owning Cargo manifest; merely renaming an unrelated artifact
 is not supported.
 See the [fixture schema and valid/invalid editor examples](docs/fixture-schema.md).
+The [simulation fixtures](examples/README.md) cover multi-entry storage reads
+and nested authorization.
 
 A contract that calls another deployed contract declares it in `depends_on`
 (explicit contract ids) and takes its address from the committed setup instead
@@ -204,7 +206,7 @@ All supported inputs are declared in [action.yml](action.yml):
 | `config-path` | HEAD policy file; default `weighin.toml`. A missing file means report-only |
 | `trusted-policy-ref` | Optional ref fetched from `origin` for an immutable policy source; must be paired with `trusted-policy-path` |
 | `trusted-policy-path` | Repository path read from the resolved trusted policy commit; HEAD cannot replace it |
-| `rpc-url` | Compatible standalone RPC; default `http://localhost:8000/rpc` |
+| `rpc-url` | Compatible standalone RPC; default `http://localhost:8000/rpc`. See [RPC authentication](docs/RPC-AUTH.md) and [rate limits](docs/RPC-RATE-LIMITS.md). |
 | `base-ref` | Baseline branch, tag, or commit SHA; PR base branch, otherwise `main`, if omitted. Invalid refs are rejected before builds or deployment. |
 | `rust-toolchain` | Contract-build Rustup override; does not change pinned native-helper toolchain |
 | `build-command` | Custom shell build command in each revision; replaces default build guarantees |
