@@ -1,5 +1,9 @@
 # WeighIn
 
+[![CI](https://github.com/WeighInNG/WeighIn/actions/workflows/weighin.yml/badge.svg)](https://github.com/WeighInNG/WeighIn/actions/workflows/weighin.yml)
+[![npm version](https://img.shields.io/npm/v/weighin.svg)](https://www.npmjs.com/package/weighin)
+[![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE)
+
 WeighIn benchmarks configured Soroban contract functions in BASE and HEAD,
 compares their resource usage, and fails a GitHub Action when a configured policy
 is violated. It is for contract maintainers who want resource regressions visible
