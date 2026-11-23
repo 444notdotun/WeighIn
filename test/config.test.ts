@@ -70,29 +70,42 @@ describe("loadConfig (TOML parsing & Zod Validation)", () => {
     expect(config?.thresholds?.global?.fail_on_any_regression).toBe(true);
   });
 
-  it("parses a full valid weighin.toml with dynamic function names", () => {
+   it("parses TOML comments and preserves # in quoted function names", () => {
     vi.mocked(fs.existsSync).mockReturnValue(true);
     vi.mocked(fs.readFileSync).mockReturnValue(`
-      [thresholds.global]
-      fail_on_any_regression = false
-      max_allowed_cpu_increase_pct = 5
+      # Global benchmark policy
+      [thresholds.global] # Global threshold table
+      fail_on_any_regression = false # Keep report-only behavior globally
 
-      [thresholds.functions.hello_world]
+      # A hash character is part of this quoted function name.
+      [thresholds.functions."swap#v2"] # Function-specific threshold
+      cpu_instructions = "strict_zero_tolerance" # Reject every CPU increase
       memory_bytes = "ignore"
-      cpu_instructions = "strict_zero_tolerance"
-      
-      [thresholds.functions.another_fn]
+
+      # A normal function name must continue to work.
+      [thresholds.functions.transfer]
       events_count = "allow_10_percent_increase"
     `);
+
     const config = loadConfig("weighin.toml");
-    expect(config?.thresholds?.functions?.hello_world?.memory_bytes).toBe(
-      "ignore",
-    );
-    expect(config?.thresholds?.functions?.another_fn?.events_count).toBe(
-      "allow_10_percent_increase",
-    );
+
+    expect(config?.thresholds?.global?.fail_on_any_regression).toBe(false);
+
+    expect(
+      config?.thresholds?.functions?.["swap#v2"]?.cpu_instructions,
+    ).toBe("strict_zero_tolerance");
+
+    expect(
+      config?.thresholds?.functions?.["swap#v2"]?.memory_bytes,
+    ).toBe("ignore");
+
+    expect(
+      config?.thresholds?.functions?.transfer?.events_count,
+    ).toBe("allow_10_percent_increase");
   });
 
+
+  
   it("throws on malformed toml", () => {
     vi.mocked(fs.existsSync).mockReturnValue(true);
     vi.mocked(fs.readFileSync).mockReturnValue(`
