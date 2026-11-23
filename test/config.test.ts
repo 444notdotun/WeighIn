@@ -158,6 +158,38 @@ describe("loadConfig (TOML parsing & Zod Validation)", () => {
     );
   });
 
+  it.each([
+    [
+      "a negative percentage string",
+      `[thresholds.functions.hello]\ncpu_instructions = "-5%"`,
+      "thresholds.functions.hello.cpu_instructions: Unsupported threshold rule",
+    ],
+    [
+      "a negative numeric percentage cap",
+      `[thresholds.functions.hello]\ncpu_instructions = -5`,
+      "thresholds.functions.hello.cpu_instructions: Number must be >= 0",
+    ],
+    [
+      "a negative named percentage rule",
+      `[thresholds.functions.hello]\ncpu_instructions = "allow_-5_percent_increase"`,
+      "thresholds.functions.hello.cpu_instructions: Unsupported threshold rule",
+    ],
+    [
+      "a negative global percentage cap",
+      `[thresholds.global]\nmax_allowed_cpu_increase_pct = -5`,
+      "thresholds.global.max_allowed_cpu_increase_pct: Number must be >= 0",
+    ],
+  ])(
+    "rejects %s with a descriptive validation error",
+    (_label, toml, issue) => {
+      vi.mocked(fs.existsSync).mockReturnValue(true);
+      vi.mocked(fs.readFileSync).mockReturnValue(toml);
+      expect(() => loadConfig("weighin.toml")).toThrowError(
+        `Invalid WeighIn configuration in weighin.toml:\n- ${issue}`,
+      );
+    },
+  );
+
   it("throws on negative limit values", () => {
     vi.mocked(fs.existsSync).mockReturnValue(true);
     vi.mocked(fs.readFileSync).mockReturnValue(`
