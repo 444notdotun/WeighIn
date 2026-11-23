@@ -93,3 +93,17 @@ test("auth-tree example binds the verifier and encodes both parties and the orde
   assert.notEqual(buyerScVal.toXDR("base64"), sellerScVal.toXDR("base64"));
   assert.equal(toScVal(orderId).u64().toString(), "42");
 });
+
+test("bundled setup-invocations fixture parses and validates setup_invocations schema", () => {
+  const file = "tests/fixtures/setup-invocations/fixtures.json";
+  const parsed = parseFixtures(
+    readFileSync(resolve(__dirname, "..", file), "utf8"),
+    file,
+  );
+  assert.equal(parsed.fixture_id, "id:committed-setup-suite");
+  assert.equal(parsed.contracts[0].setup_invocations.length, 2);
+  assert.deepEqual(
+    parsed.contracts[0].setup_invocations.map((s) => s.function_name),
+    ["initialize", "add"],
+  );
+});
