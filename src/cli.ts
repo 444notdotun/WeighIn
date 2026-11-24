@@ -17,12 +17,19 @@ function getGitCommit(): string {
   }
 }
 
+function verboseLog(enabled: boolean, message: string): void {
+  if (enabled) {
+    console.log(message);
+  }
+}
+
 export interface CliOptions {
   fixturesPath: string;
   outputPath: string | null;
   rpcUrl: string;
   helperPath?: string;
   jsonStdout: boolean;
+  verbose: boolean;
   allowCrossTargetSubstitution: boolean;
   baseFixturesPath?: string | null;
 }
@@ -70,7 +77,6 @@ function readPackageVersion(): string {
   }
   return metadata.version;
 }
-
 export function parseArgs(
   rawArgs: string[] = process.argv.slice(2),
 ): CliCommand {
@@ -80,6 +86,7 @@ export function parseArgs(
   let optionOutputPath: string | null = null;
   let positionalCount = 0;
   let jsonStdout = false;
+  let verbose = false;
   let rpcUrl = DEFAULT_RPC_URL;
   let helperPath: string | undefined;
   let allowCrossTargetSubstitution = false;
@@ -144,6 +151,10 @@ export function parseArgs(
         jsonStdout = true;
         continue;
       }
+      if (arg === "-v" || arg === "--verbose") {
+        verbose = true;
+        continue;
+      }
       if (arg === "--allow-cross-target-substitution") {
         allowCrossTargetSubstitution = true;
         continue;
@@ -206,12 +217,12 @@ export function parseArgs(
       rpcUrl,
       helperPath,
       jsonStdout,
+      verbose,
       allowCrossTargetSubstitution,
       baseFixturesPath,
     },
   };
 }
-
 async function main() {
   let command: CliCommand;
   try {
@@ -243,6 +254,7 @@ async function main() {
     outputPath,
     rpcUrl,
     jsonStdout,
+    verbose,
     helperPath,
     allowCrossTargetSubstitution,
     baseFixturesPath,
@@ -293,12 +305,10 @@ async function main() {
   }
 
   try {
-    console.log(`Starting Weighin Benchmarking...`);
-    console.log(`Fixtures: ${fixturesPath}`);
-    console.log(`Output:   ${jsonStdout ? "stdout" : outputPath}`);
-    console.log(`RPC URL:  ${sanitizeEndpoint(rpcUrl)}`);
-    console.log(`Commit:   ${gitCommit}`);
-    console.log(`SDK:      ${sdkSummary}`);
+    verboseLog(
+      verbose,
+      `Starting Weighin Benchmarking...\nFixtures: ${fixturesPath}\nOutput:   ${jsonStdout ? "stdout" : outputPath}\nRPC URL:  ${sanitizeEndpoint(rpcUrl)}\nCommit:   ${gitCommit}\nSDK:      ${sdkSummary}`,
+    );
 
     // Measure HEAD fixtures
     const headResults = await runMeasurement({
