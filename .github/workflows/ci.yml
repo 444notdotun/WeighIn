@@ -31,6 +31,13 @@ jobs:
         run: cargo +1.95.0 fetch --locked --manifest-path native/simulation/Cargo.toml
       - name: Fetch locked setup fixture crates
         run: cargo +1.95.0 fetch --locked --manifest-path tests/fixtures/setup-invocations/Cargo.toml
+      - name: Install checksum-verified Stellar CLI
+        run: |
+          curl -fsSL https://github.com/stellar/stellar-cli/releases/download/v28.1.0/stellar-cli-28.1.0-x86_64-unknown-linux-gnu.tar.gz -o "$RUNNER_TEMP/stellar-cli.tar.gz"
+          echo "c1680deee94301d33ada7a17f98411e642a4248c727afbd2e43050d345746462  $RUNNER_TEMP/stellar-cli.tar.gz" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/stellar-cli"
+          tar -xzf "$RUNNER_TEMP/stellar-cli.tar.gz" -C "$RUNNER_TEMP/stellar-cli"
+          echo "$RUNNER_TEMP/stellar-cli" >> "$GITHUB_PATH"
       - run: npm ci
       - name: Verify package manifest and lockfile are synchronized
         run: git diff --exit-code -- package-lock.json
