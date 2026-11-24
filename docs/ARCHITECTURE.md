@@ -25,8 +25,33 @@ GitHub comment workflow.
 
 ## Pull Request Measurement Flow
 
-The following sequence illustrates the complete measurement and reporting
-process.
+The flowchart shows the major stages and the separate trusted comment
+workflow. The producer starts with the pull request HEAD already checked out;
+it fetches the target BASE ref and creates a detached worktree rather than
+checking out a merge base.
+
+```mermaid
+flowchart TD
+    PR[Pull request opened or updated] --> Producer[Read-only producer workflow]
+    Producer --> Head[Validate checked-out HEAD]
+    Head --> BaseFetch[Fetch target BASE ref from origin]
+    BaseFetch --> BaseTree[Create detached BASE worktree]
+    BaseTree --> RPCCheck[Check RPC health and protocol compatibility]
+    RPCCheck --> BuildHead[Build HEAD contracts from HEAD fixtures]
+    BuildHead --> SimHead[Simulate HEAD invocations through Soroban RPC]
+    SimHead --> BuildBase[Build BASE contracts from BASE fixtures]
+    BuildBase --> SimBase[Simulate BASE invocations through Soroban RPC]
+    SimBase --> Pair[Validate and pair logical benchmark identities]
+    Pair --> Diff[Compute BASE-to-HEAD resource diffs]
+    Diff --> Threshold[Evaluate thresholds and absolute budgets]
+    Threshold --> Report[Generate report and versioned PR metadata]
+    Report --> Upload[Upload producer artifacts]
+    Upload --> Consumer[Trusted workflow downloads and validates artifacts]
+    Consumer --> Freshness[Confirm report matches current PR HEAD]
+    Freshness --> Comment[Create or update pull request comment]
+```
+
+The sequence below gives more detail about the component interactions.
 
 ```mermaid
 sequenceDiagram
@@ -275,17 +300,18 @@ untrusted pull request code.
 |---|---|
 | `action.yml` | GitHub Action inputs, outputs and entry point |
 | `src/action.ts` | Main BASE/HEAD orchestration |
+| `src/cli.ts` | Standalone entry point for measuring fixture invocations from existing WASM; does not orchestrate the full GitHub BASE/HEAD workflow |
+| `src/measurement.ts` | Deploys benchmark WASM as needed and coordinates per-invocation measurement |
+| `src/simulation.ts` | Soroban RPC simulation, ledger-state capture and native helper validation |
+| `src/diff.ts` | Pairs BASE/HEAD benchmarks by logical identity and computes resource deltas |
+| `src/threshold.ts` | Loads and evaluates regression thresholds, aggregate budgets and absolute limits |
+| `src/comment.ts` | Renders and creates or updates the WeighIn pull request report comment |
+| `src/comment-action.ts` | Trusted artifact consumer that validates producer output before comment publication |
 | `src/build-selection.ts` | Contract build selection |
 | `src/build.ts` | Contract build process |
-| `src/measurement.ts` | Contract deployment and measurement |
-| `src/simulation.ts` | RPC and native simulation |
 | `src/record-schema.ts` | Measurement record schema and metric keys |
-| `src/diff.ts` | Benchmark comparison and resource differences |
-| `src/config.ts` | Configuration schema validation |
-| `src/threshold.ts` | Threshold and absolute-limit evaluation |
+| `src/config.ts` | Fixture and policy configuration schema validation |
 | `src/report.ts` | Markdown report and metadata generation |
-| `src/comment-action.ts` | Separate comment consumer |
-| `src/comment.ts` | PR comment rendering and updating |
 | `.github/workflows/weighin.yml` | Example producer workflow |
 | `.github/workflows/weighin-comment.yml` | Example consumer workflow |
 
