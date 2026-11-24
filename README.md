@@ -123,7 +123,12 @@ of a hardcoded value:
 ```
 
 Every revision deploys each contract once, dependencies first, and commits the
-whole setup before any measured invocation. Each new deployment must return
+whole setup — including any ordered `setup_invocations` declared on a contract
+— before any measured invocation. Contracts with `setup_invocations` deploy to
+a fresh instance per run, prepare/sign/submit each setup call with the deployer
+account (standalone source-account authorization only), confirm `SUCCESS`
+inclusion in order, and exclude all setup consumption from benchmark metrics.
+Each new deployment must return
 the expected deterministic contract address in its successful create receipt.
 If validation fails, the error reports the expected address and the observed
 address, when available. Unknown, duplicate, self or cyclic
