@@ -3,7 +3,7 @@
   "contracts": [
     {
       "id": "initialized-contract",
-      "wasm_path": "initialized_contract.wasm",
+      "wasm_path": "target/wasm32v1-none/release/contract_test.wasm",
       "setup_invocations": [
         {
           "id": "seed",

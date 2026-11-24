@@ -1,5 +1,5 @@
 // Real protocol-28 native Soroban host replay for the bundled initialized
-// contract (`tests/fixtures/setup-invocations/initialized_contract.wasm`).
+// contract built from `tests/fixtures/setup-invocations/src/lib.rs`.
 // Proves against the actual compiled WASM and pinned Rust soroban-simulation
 // helper that:
 // 1. Without committed setup state, `read_value()` and `add(12)` trap.
@@ -25,7 +25,7 @@ const helper = path.resolve(
 const baseInput = require("../../docs/experiments/compute-source-spike/base-input.json");
 const wasmPath = path.resolve(
   __dirname,
-  "../fixtures/setup-invocations/initialized_contract.wasm",
+  "../fixtures/setup-invocations/target/wasm32v1-none/release/contract_test.wasm",
 );
 
 const LIMITS = {

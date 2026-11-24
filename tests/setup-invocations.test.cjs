@@ -34,7 +34,10 @@ const CALLEE_WASM = Buffer.from([...MAGIC, 0x00, 0x01, 0x71]);
 const CALLER_WASM = Buffer.from([...MAGIC, 0x00, 0x01, 0x72]);
 const BUNDLED_DIR = path.resolve(__dirname, "fixtures/setup-invocations");
 const BUNDLED_FIXTURES = path.join(BUNDLED_DIR, "fixtures.json");
-const BUNDLED_WASM = path.join(BUNDLED_DIR, "initialized_contract.wasm");
+const BUNDLED_WASM = path.join(
+  BUNDLED_DIR,
+  "target/wasm32v1-none/release/contract_test.wasm",
+);
 
 const txHash = (n) => n.toString(16).padStart(64, "0");
 
@@ -347,7 +350,7 @@ test("preflightSetupArguments skips bound args and aggregates literal arg errors
 test("bundled initialized contract commits setup calls in order, reads committed state, and excludes setup costs from benchmark metrics", async (t) => {
   assert.ok(
     fs.existsSync(BUNDLED_WASM),
-    "bundled initialized_contract.wasm must exist",
+    "the source-built setup fixture WASM must exist",
   );
   const wasmBytes = fs.readFileSync(BUNDLED_WASM);
   assert.deepEqual(

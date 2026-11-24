@@ -43,7 +43,10 @@ const helper =
     "native/simulation/target/x86_64-unknown-linux-gnu/release/weighin-simulation",
   );
 const fixtureDir = path.join(repository, "tests/fixtures/setup-invocations");
-const wasmFile = path.join(fixtureDir, "initialized_contract.wasm");
+const wasmFile = path.join(
+  fixtureDir,
+  "target/wasm32v1-none/release/contract_test.wasm",
+);
 const fixturesFile = path.join(fixtureDir, "fixtures.json");
 
 fs.mkdirSync(destination, { recursive: true });

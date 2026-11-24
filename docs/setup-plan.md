@@ -58,7 +58,7 @@ before measured benchmark `invocations` run:
 ```json
 {
   "id": "initialized-contract",
-  "wasm_path": "initialized_contract.wasm",
+  "wasm_path": "target/wasm32v1-none/release/contract_test.wasm",
   "setup_invocations": [
     { "id": "seed", "function_name": "initialize", "args": [{ "type": "u32", "value": 30 }] },
     { "id": "increment", "function_name": "add", "args": [{ "type": "u32", "value": 12 }] }
@@ -91,9 +91,10 @@ Key guarantees and boundaries:
   contracts with `setup_invocations` deploy with a fresh salt per run, BASE and
   HEAD do not collide or double-initialize on a shared standalone network while
   still pairing by logical identity.
-- **Bundled initialized contract:** `tests/fixtures/setup-invocations/` bundles
-  an initialized contract (`src/lib.rs`, `initialized_contract.wasm`, and
-  `fixtures.json`) with no constructor whose benchmark reads (`read_value`,
+- **Source-built initialized contract:** `tests/fixtures/setup-invocations/`
+  contains the contract source (`src/lib.rs`), locked Cargo manifest, and
+  `fixtures.json`; the test scripts build its WASM into the ignored `target/`
+  directory. The contract has no constructor, so benchmark reads (`read_value`,
   `check_value(42)`) fail unless `initialize(30)` and `add(12)` committed in
   order. `tests/setup-invocations.test.cjs` verifies success, ordering,
   signing, metric exclusion, cross-revision pairing, and invalid/failure cases;
