@@ -24,7 +24,7 @@ column causes a parse error.
 |---|---|---|
 | Fixture root | `FixturesSpecSchema` | `id` (optional), `contracts` (required) |
 | Contract | `ContractSpecSchema` | `id` (optional), `wasm_path` (required), `invocations` (required) |
-| Invocation | `InvocationSpecSchema` | `id` (optional), `function_name` (required), `args` (required) |
+| Invocation | `InvocationSpecSchema` | `id` (optional), `function_name` (required), `args` (optional, defaults to `[]`) |
 | Typed argument | `InvocationArgSchema` | `type` (required), `value` (required) |
 
 All four schemas are defined in `src/config.ts` and use Zod's `.strict()` mode.

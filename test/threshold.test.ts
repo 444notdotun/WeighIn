@@ -219,6 +219,72 @@ describe("enforceThresholds", () => {
     expect(violations[0].message).toContain("Infinity");
   });
 
+  describe("zero baseline with nonzero head", () => {
+    // A newly introduced resource (base = 0, head = 10) has no finite
+    // percentage change, so policy evaluation must not divide by zero.
+    function zeroBaselineDiff(): DiffResult {
+      const diff = createMockDiff("ledger_write_entries", 10, null, true);
+      const metric = diff.contracts[0].functions[0].metrics.find(
+        (m) => m.key === "ledger_write_entries",
+      )!;
+      metric.base.consumed = 0;
+      metric.head.consumed = 10;
+      return diff;
+    }
+
+    it("fails strict_zero_tolerance with the absolute increase", () => {
+      const config: WeighinConfig = {
+        thresholds: {
+          functions: {
+            "test-fn": { ledger_write_entries: "strict_zero_tolerance" },
+          },
+        },
+      };
+      const violations = enforceThresholds(zeroBaselineDiff(), config);
+      expect(violations).toEqual([
+        expect.objectContaining({
+          contract_id: "contract-a",
+          function_name: "test-fn",
+          metric: "ledger_write_entries",
+          delta: 10,
+          pct: null,
+          rule: "strict_zero_tolerance",
+          message:
+            "ledger_write_entries increased by 10 (strict zero tolerance)",
+        }),
+      ]);
+    });
+
+    it.each([
+      ["named rule", "allow_50_percent_increase"],
+      ["numeric cap", 50],
+    ] as const)(
+      "returns a structured violation for a percentage %s instead of NaN",
+      (_label, rule) => {
+        const config: WeighinConfig = {
+          thresholds: {
+            functions: { "test-fn": { ledger_write_entries: rule } },
+          },
+        };
+        let violations: ReturnType<typeof enforceThresholds> = [];
+        expect(() => {
+          violations = enforceThresholds(zeroBaselineDiff(), config);
+        }).not.toThrow();
+        expect(violations).toHaveLength(1);
+        const [violation] = violations;
+        expect(violation).toMatchObject({
+          metric: "ledger_write_entries",
+          delta: 10,
+          pct: null,
+          rule: "allow_50_percent_increase",
+          message: "ledger_write_entries increased by Infinity% (limit 50%)",
+        });
+        expect(Number.isNaN(violation.delta)).toBe(false);
+        expect(violation.message).not.toContain("NaN");
+      },
+    );
+  });
+
   describe("Absolute limits", () => {
     it("fails when absolute limit is exceeded", () => {
       const config = {

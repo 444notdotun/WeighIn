@@ -335,7 +335,7 @@ export const InvocationSpecSchema = z
   .object({
     id: idSchema.optional(),
     function_name: z.string().min(1),
-    args: z.array(TopLevelInvocationArgSchema),
+    args: z.array(TopLevelInvocationArgSchema).default([]),
   })
   .strict();
 
@@ -361,6 +361,7 @@ type JsonSchemaObject = Record<string, unknown>;
 export function getFixturesJsonSchema(): JsonSchemaObject {
   const schema = z.toJSONSchema(FixturesSpecSchema, {
     unrepresentable: "any",
+    io: "input",
   }) as JsonSchemaObject;
   const properties = schema.properties as JsonSchemaObject;
   const contracts = properties.contracts as JsonSchemaObject;
