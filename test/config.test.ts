@@ -358,6 +358,70 @@ describe("FixturesSpecSchema", () => {
       }).success,
     ).toBe(false);
   });
+
+  it("accepts valid setup_invocations and rejects malformed setup_invocations", () => {
+    const valid = {
+      contracts: [
+        {
+          id: "initialized",
+          wasm_path: "test.wasm",
+          depends_on: ["dep"],
+          setup_invocations: [
+            {
+              id: "init",
+              function_name: "initialize",
+              args: [
+                { type: "U32", value: 30 },
+                { type: "Address", binding: { contract: "dep" } },
+              ],
+            },
+          ],
+          invocations: [{ function_name: "read_value", args: [] }],
+        },
+        {
+          id: "dep",
+          wasm_path: "dep.wasm",
+          invocations: [{ function_name: "ping", args: [] }],
+        },
+      ],
+    };
+    const parsed = FixturesSpecSchema.safeParse(valid);
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.contracts[0].setup_invocations?.[0].args[0].type).toBe(
+        "u32",
+      );
+      expect(parsed.data.contracts[0].setup_invocations?.[0].args[1].type).toBe(
+        "address",
+      );
+    }
+
+    expect(
+      FixturesSpecSchema.safeParse({
+        contracts: [
+          {
+            wasm_path: "test.wasm",
+            setup_invocations: [
+              { function_name: "init", args: [], extra: true },
+            ],
+            invocations: [{ function_name: "read", args: [] }],
+          },
+        ],
+      }).success,
+    ).toBe(false);
+
+    expect(
+      FixturesSpecSchema.safeParse({
+        contracts: [
+          {
+            wasm_path: "test.wasm",
+            setup_invocations: [{ id: "  ", function_name: "init", args: [] }],
+            invocations: [{ function_name: "read", args: [] }],
+          },
+        ],
+      }).success,
+    ).toBe(false);
+  });
 });
 
 describe("policy schema agreement (WeighinConfigSchema and validateConfig)", () => {
