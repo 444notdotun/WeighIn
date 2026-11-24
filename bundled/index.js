@@ -52453,7 +52453,7 @@ var SetupInvocationSpecSchema = external_exports.object({
 var InvocationSpecSchema = external_exports.object({
   id: idSchema.optional(),
   function_name: external_exports.string().min(1),
-  args: external_exports.array(TopLevelInvocationArgSchema)
+  args: external_exports.array(TopLevelInvocationArgSchema).default([])
 }).strict();
 var ContractSpecSchema = external_exports.object({
   id: idSchema.optional(),
@@ -52468,7 +52468,8 @@ var FixturesSpecSchema = external_exports.object({
 }).strict();
 function getFixturesJsonSchema() {
   const schema = external_exports.toJSONSchema(FixturesSpecSchema, {
-    unrepresentable: "any"
+    unrepresentable: "any",
+    io: "input"
   });
   const properties = schema.properties;
   const contracts = properties.contracts;

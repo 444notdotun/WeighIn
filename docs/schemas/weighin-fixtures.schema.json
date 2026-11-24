@@ -293,8 +293,7 @@
                 }
               },
               "required": [
-                "function_name",
-                "args"
+                "function_name"
               ],
               "additionalProperties": false
             }
