@@ -11,6 +11,13 @@ import { Violation, PolicyOrigin, EffectivePolicyReport } from "./threshold";
 
 export const COMMENT_MARKER = "<!-- weighin-report -->";
 
+/** Maximum GitHub PR comment length is 65,536; we target 60,000 for safety. */
+export const MAX_COMMENT_LENGTH = 60_000;
+
+/** Notice appended when the comment is truncated. */
+export const TRUNCATION_NOTICE =
+  "\n\n> ⚠️ **Report truncated** to fit within GitHub's 65,536-character comment limit. The full report is available in the workflow artifacts.";
+
 export interface CommentInfo {
   id: number;
   body?: string | null;
@@ -704,5 +711,31 @@ export function renderComment(
   lines.push("");
   lines.push(COMMENT_MARKER);
 
-  return lines.join("\n");
+  const body = lines.join("\n");
+
+  // Truncate if the comment exceeds the safe limit
+  if (body.length > MAX_COMMENT_LENGTH) {
+    // Ensure we preserve the COMMENT_MARKER by putting it at the end of the truncated content
+    const markerIndex = body.lastIndexOf(COMMENT_MARKER);
+    const availableLength =
+      MAX_COMMENT_LENGTH - TRUNCATION_NOTICE.length - COMMENT_MARKER.length - 1; // -1 for newline
+
+    let truncated: string;
+    if (markerIndex > 0 && markerIndex <= availableLength) {
+      // Marker fits within the available space, truncate before it
+      truncated = body.slice(0, markerIndex);
+    } else {
+      // Marker doesn't fit or is too late, just truncate at available length
+      truncated = body.slice(0, availableLength);
+      // Find the last complete line to avoid cutting mid-line
+      const lastNewline = truncated.lastIndexOf("\n");
+      if (lastNewline > 0) {
+        truncated = truncated.slice(0, lastNewline);
+      }
+    }
+
+    return truncated + "\n" + COMMENT_MARKER + TRUNCATION_NOTICE;
+  }
+
+  return body;
 }

@@ -4,6 +4,8 @@ import {
   findReportComment,
   upsertPrComment,
   COMMENT_MARKER,
+  MAX_COMMENT_LENGTH,
+  TRUNCATION_NOTICE,
 } from "../src/comment";
 import { DiffResult } from "../src/diff";
 import { Violation } from "../src/threshold";
@@ -369,6 +371,94 @@ describe("renderComment", () => {
     expect(comment).toContain("<details><summary>Secondary metrics</summary>");
     expect(comment).toContain("</details>");
     expect(comment).toContain("#### `function-11 / id:case-11`");
+  });
+
+  it("truncates comment with many benchmark rows and appends truncation notice", () => {
+    // Create a diff with many functions, each with many metrics to generate a large comment
+    const diff = createMockDiff(false);
+    diff.contracts[0].functions = Array.from({ length: 250 }, (_, index) => ({
+      function_name: `benchmark-function-${index + 1}`,
+      case_id: `id:case-${index + 1}`,
+      hasRegression: index % 10 === 0, // Some regressions for variety
+      metrics: [
+        {
+          key: "cpu_instructions" as const,
+          base: { consumed: 100000 + index * 100, limit: 1000000 },
+          head: { consumed: 110000 + index * 100, limit: 1000000 },
+          delta: 10000,
+          pct: 10.0,
+          regression: true,
+        },
+        {
+          key: "memory_bytes" as const,
+          base: { consumed: 50000 + index * 50, limit: 500000 },
+          head: { consumed: 55000 + index * 50, limit: 500000 },
+          delta: 5000,
+          pct: 10.0,
+          regression: true,
+        },
+        {
+          key: "ledger_write_bytes" as const,
+          base: { consumed: 1000 + index * 10, limit: 10000 },
+          head: { consumed: 1100 + index * 10, limit: 10000 },
+          delta: 100,
+          pct: 10.0,
+          regression: true,
+        },
+        {
+          key: "ledger_read_entries" as const,
+          base: { consumed: 2000 + index * 5, limit: 5000 },
+          head: { consumed: 2100 + index * 5, limit: 5000 },
+          delta: 100,
+          pct: 5.0,
+          regression: true,
+        },
+        {
+          key: "ledger_read_bytes" as const,
+          base: { consumed: 30000 + index * 20, limit: 100000 },
+          head: { consumed: 31000 + index * 20, limit: 100000 },
+          delta: 1000,
+          pct: 3.3,
+          regression: true,
+        },
+        {
+          key: "ledger_write_entries" as const,
+          base: { consumed: 500 + index * 2, limit: 2000 },
+          head: { consumed: 550 + index * 2, limit: 2000 },
+          delta: 50,
+          pct: 10.0,
+          regression: true,
+        },
+        {
+          key: "events_count" as const,
+          base: { consumed: 50 + index, limit: 200 },
+          head: { consumed: 55 + index, limit: 200 },
+          delta: 5,
+          pct: 10.0,
+          regression: true,
+        },
+        {
+          key: "event_data_bytes" as const,
+          base: { consumed: 1000 + index * 10, limit: 5000 },
+          head: { consumed: 1100 + index * 10, limit: 5000 },
+          delta: 100,
+          pct: 10.0,
+          regression: true,
+        },
+      ],
+    }));
+
+    const comment = renderComment(diff, [], "main", "abcdef12345678");
+
+    // Verify the comment is truncated to stay under the safe limit
+    expect(comment.length).toBeLessThanOrEqual(MAX_COMMENT_LENGTH);
+
+    // Verify the truncation notice is appended
+    expect(comment).toContain(TRUNCATION_NOTICE.trim());
+    expect(comment).toContain("⚠️ **Report truncated**");
+
+    // Verify the marker is still present (it should be before the truncation notice)
+    expect(comment).toContain("<!-- weighin-report -->");
   });
 });
 
