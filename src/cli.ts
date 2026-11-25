@@ -86,7 +86,12 @@ function readPackageVersion(): string {
 
 export function validateFixtures(fixturePath: string): string {
   try {
-    parseFixtures(fs.readFileSync(fixturePath, "utf8"), fixturePath);
+    const contents = fs.readFileSync(fixturePath, "utf8");
+    // Offline validation has no comparison workspace for path-based IDs.
+    const identityPath = path.isAbsolute(fixturePath)
+      ? path.basename(fixturePath)
+      : fixturePath;
+    parseFixtures(contents, identityPath);
   } catch (error) {
     throw new Error(`Validation failed for ${fixturePath}: ${String(error)}`, {
       cause: error,
