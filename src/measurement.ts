@@ -261,8 +261,11 @@ export function toScVal(arg: InvocationArg): xdr.ScVal {
       return xdr.ScVal.scvU32(val);
     case "i32":
       return xdr.ScVal.scvI32(val);
-    case "bool":
+    case "bool": {
+      if (typeof val !== "boolean")
+        throw new Error("Invalid value for bool: must be true or false");
       return xdr.ScVal.scvBool(val);
+    }
     case "u64":
     case "i64":
     case "u128":
