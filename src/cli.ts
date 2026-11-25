@@ -39,6 +39,7 @@ export interface CliOptions {
 export type CliCommand =
   | { kind: "help" }
   | { kind: "version" }
+  | { kind: "validate"; fixturePath: string }
   | { kind: "measure"; options: CliOptions };
 
 const DEFAULT_FIXTURES_PATH = "weighin-fixtures.json";
@@ -53,6 +54,8 @@ Measure Soroban contract resource usage from an existing fixtures file.
 The command only measures: it does not build contracts, compare BASE/HEAD
 revisions, enforce thresholds or post comments.
 
+  weighin validate <fixtures.json>   Validate a fixtures file offline
+
 Positional arguments:
   fixtures.json         Fixtures file to measure (default: ${DEFAULT_FIXTURES_PATH})
   results.json          Results file to write (default: ${DEFAULT_OUTPUT_PATH})
@@ -63,6 +66,7 @@ Options:
   --helper-path <path>  Use an existing compatible native simulation helper
   --json-stdout         Write JSON results to stdout instead of a file
   --stdout              Alias for --json-stdout
+  -v, --verbose         Show when benchmark measurement starts
   --allow-cross-target-substitution
                         Allow cross-target WASM substitution
   --                    Treat remaining arguments as positional paths
@@ -79,9 +83,38 @@ function readPackageVersion(): string {
   }
   return metadata.version;
 }
+
+export function validateFixtures(fixturePath: string): string {
+  try {
+    parseFixtures(fs.readFileSync(fixturePath, "utf8"), fixturePath);
+  } catch (error) {
+    throw new Error(`Validation failed for ${fixturePath}: ${String(error)}`, {
+      cause: error,
+    });
+  }
+  return `${fixturePath}: fixture is valid`;
+}
+
 export function parseArgs(
   rawArgs: string[] = process.argv.slice(2),
 ): CliCommand {
+  if (rawArgs[0] === "validate") {
+    const [fixturePath, extra] = rawArgs.slice(1);
+    if (fixturePath === "--help" || fixturePath === "-h") {
+      return { kind: "help" };
+    }
+    if (!fixturePath?.trim()) {
+      throw new Error("validate requires a fixtures file path");
+    }
+    if (fixturePath.startsWith("-")) {
+      throw new Error(`Unknown option: ${fixturePath}`);
+    }
+    if (extra !== undefined) {
+      throw new Error(`Unexpected argument: ${extra}`);
+    }
+    return { kind: "validate", fixturePath };
+  }
+
   let fixturesPath: string | null = null;
   let baseFixturesPath: string | null = null;
   let positionalOutputPath: string | null = null;
@@ -251,6 +284,16 @@ async function main() {
     return;
   }
 
+  if (command.kind === "validate") {
+    try {
+      console.log(validateFixtures(command.fixturePath));
+    } catch (error) {
+      console.error(error instanceof Error ? error.message : String(error));
+      process.exitCode = 1;
+    }
+    return;
+  }
+
   const {
     fixturesPath,
     outputPath,
@@ -307,10 +350,12 @@ async function main() {
   }
 
   try {
-    verboseLog(
-      verbose,
-      `Starting Weighin Benchmarking...\nFixtures: ${fixturesPath}\nOutput:   ${jsonStdout ? "stdout" : outputPath}\nRPC URL:  ${sanitizeEndpoint(rpcUrl)}\nCommit:   ${gitCommit}\nSDK:      ${sdkSummary}`,
-    );
+    console.log(`Fixtures: ${fixturesPath}`);
+    console.log(`Output:   ${jsonStdout ? "stdout" : outputPath}`);
+    console.log(`RPC URL:  ${sanitizeEndpoint(rpcUrl)}`);
+    console.log(`Commit:   ${gitCommit}`);
+    console.log(`SDK:      ${sdkSummary}`);
+    verboseLog(verbose, "Starting Weighin Benchmarking...");
 
     // Measure HEAD fixtures
     const headResults = await runMeasurement({
