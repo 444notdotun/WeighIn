@@ -345,6 +345,31 @@ describe("renderComment", () => {
     expect(diff1.contracts[0].contract_id).toBe("CBBB");
     expect(violations1[0].function_name).toBe("beta_fn");
   });
+
+  it("wraps secondary metrics in details for contracts with more than 10 functions", () => {
+    const diff = createMockDiff(false);
+    diff.contracts[0].functions = Array.from({ length: 12 }, (_, index) => ({
+      function_name: `function-${index + 1}`,
+      case_id: `id:case-${index + 1}`,
+      hasRegression: false,
+      metrics: [
+        {
+          key: "cpu_instructions" as const,
+          base: { consumed: 100, limit: 1000 },
+          head: { consumed: 100, limit: 1000 },
+          delta: 0,
+          pct: 0,
+          regression: false,
+        },
+      ],
+    }));
+
+    const comment = renderComment(diff, [], "main", "abcdef123");
+
+    expect(comment).toContain("<details><summary>Secondary metrics</summary>");
+    expect(comment).toContain("</details>");
+    expect(comment).toContain("#### `function-11 / id:case-11`");
+  });
 });
 
 describe("findReportComment unit tests", () => {
