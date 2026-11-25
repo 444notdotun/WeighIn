@@ -30,6 +30,7 @@ export interface CliOptions {
   helperPath?: string;
   jsonStdout: boolean;
   verbose: boolean;
+  json: boolean;
   allowCrossTargetSubstitution: boolean;
   baseFixturesPath?: string | null;
 }
@@ -61,6 +62,7 @@ Options:
   --helper-path <path>  Use an existing compatible native simulation helper
   --json-stdout         Write JSON results to stdout instead of a file
   --stdout              Alias for --json-stdout
+  --json                Emit only machine-readable JSON on stdout (implies --json-stdout)
   --allow-cross-target-substitution
                         Allow cross-target WASM substitution
   --                    Treat remaining arguments as positional paths
@@ -91,6 +93,7 @@ export function parseArgs(
   let helperPath: string | undefined;
   let allowCrossTargetSubstitution = false;
   let endOfOptions = false;
+  let json = false;
   const seenScalarOptions = new Set<string>();
 
   for (let i = 0; i < rawArgs.length; i++) {
@@ -148,6 +151,11 @@ export function parseArgs(
         continue;
       }
       if (arg === "--stdout" || arg === "--json-stdout") {
+        jsonStdout = true;
+        continue;
+      }
+      if (arg === "--json") {
+        json = true;
         jsonStdout = true;
         continue;
       }
@@ -218,6 +226,7 @@ export function parseArgs(
       helperPath,
       jsonStdout,
       verbose,
+      json,
       allowCrossTargetSubstitution,
       baseFixturesPath,
     },
@@ -256,6 +265,7 @@ async function main() {
     jsonStdout,
     verbose,
     helperPath,
+    json,
     allowCrossTargetSubstitution,
     baseFixturesPath,
   } = command.options;
@@ -291,7 +301,7 @@ async function main() {
       ...new Set(associations.flatMap((assoc) => assoc.versions)),
     ];
     sdkSummary = formatSdkVersions(versions);
-    for (const assoc of associations) {
+    for (const assoc of json ? [] : associations) {
       const relative = path.relative(process.cwd(), assoc.wasmPath);
       const lockHint = assoc.lockPath
         ? ` (lock: ${path.relative(process.cwd(), assoc.lockPath)})`
@@ -306,7 +316,7 @@ async function main() {
 
   try {
     verboseLog(
-      verbose,
+      verbose && !json,
       `Starting Weighin Benchmarking...\nFixtures: ${fixturesPath}\nOutput:   ${jsonStdout ? "stdout" : outputPath}\nRPC URL:  ${sanitizeEndpoint(rpcUrl)}\nCommit:   ${gitCommit}\nSDK:      ${sdkSummary}`,
     );
 
@@ -386,14 +396,16 @@ async function main() {
     const benchmarkLabel = totalBenchmarks === 1 ? "benchmark" : "benchmarks";
     const violationLabel = violationCount === 1 ? "violation" : "violations";
 
-    if (allPassed) {
-      console.log(
-        `✔ ${totalBenchmarks} ${benchmarkLabel} passed, 0 ${violationLabel}`,
-      );
-    } else {
-      console.log(
-        `✖ ${passedCount} ${benchmarkLabel} passed, ${violationCount} ${violationLabel} detected`,
-      );
+    if (!json) {
+      if (allPassed) {
+        console.log(
+          `✔ ${totalBenchmarks} ${benchmarkLabel} passed, 0 ${violationLabel}`,
+        );
+      } else {
+        console.log(
+          `✖ ${passedCount} ${benchmarkLabel} passed, ${violationCount} ${violationLabel} detected`,
+        );
+      }
     }
 
     // Write results file if not jsonStdout
