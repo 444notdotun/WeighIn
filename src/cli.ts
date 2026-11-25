@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: Apache-2.0
+
 import * as fs from "fs";
 import * as path from "path";
 import { execSync } from "child_process";
