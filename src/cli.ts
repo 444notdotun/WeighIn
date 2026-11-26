@@ -89,8 +89,7 @@ export function parseArgs(
   let positionalCount = 0;
   let jsonStdout = false;
   let verbose = false;
-  let dryRun = false;
-  let rpcUrl = DEFAULT_RPC_URL;
+  let rpcUrl = process.env.WEIGHIN_RPC_URL?.trim() || DEFAULT_RPC_URL;
   let helperPath: string | undefined;
   let allowCrossTargetSubstitution = false;
   let endOfOptions = false;
