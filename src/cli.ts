@@ -32,6 +32,7 @@ export interface CliOptions {
   helperPath?: string;
   jsonStdout: boolean;
   verbose: boolean;
+  dryRun: boolean;
   allowCrossTargetSubstitution: boolean;
   baseFixturesPath?: string | null;
 }
@@ -66,9 +67,10 @@ Options:
   --helper-path <path>  Use an existing compatible native simulation helper
   --json-stdout         Write JSON results to stdout instead of a file
   --stdout              Alias for --json-stdout
-  -v, --verbose         Show when benchmark measurement starts
+  --json                Emit only machine-readable JSON on stdout (implies --json-stdout)
   --allow-cross-target-substitution
                         Allow cross-target WASM substitution
+  --dry-run             Validate config, fixtures, and WASM paths without RPC
   --                    Treat remaining arguments as positional paths
   -h, --help            Show this help and exit
   --version             Show the installed package version and exit`;
@@ -127,10 +129,11 @@ export function parseArgs(
   let positionalCount = 0;
   let jsonStdout = false;
   let verbose = false;
-  let rpcUrl = DEFAULT_RPC_URL;
+  let rpcUrl = process.env.WEIGHIN_RPC_URL?.trim() || DEFAULT_RPC_URL;
   let helperPath: string | undefined;
   let allowCrossTargetSubstitution = false;
   let endOfOptions = false;
+  let json = false;
   const seenScalarOptions = new Set<string>();
 
   for (let i = 0; i < rawArgs.length; i++) {
@@ -191,12 +194,21 @@ export function parseArgs(
         jsonStdout = true;
         continue;
       }
+      if (arg === "--json") {
+        json = true;
+        jsonStdout = true;
+        continue;
+      }
       if (arg === "-v" || arg === "--verbose") {
         verbose = true;
         continue;
       }
       if (arg === "--allow-cross-target-substitution") {
         allowCrossTargetSubstitution = true;
+        continue;
+      }
+      if (arg === "--dry-run") {
+        dryRun = true;
         continue;
       }
       if (arg.startsWith("--")) {
@@ -258,10 +270,44 @@ export function parseArgs(
       helperPath,
       jsonStdout,
       verbose,
+      dryRun,
       allowCrossTargetSubstitution,
       baseFixturesPath,
     },
   };
+}
+
+export function runDryRun(
+  fixturesPath: string,
+  configPath = "weighin.toml",
+): void {
+  loadConfig(configPath);
+
+  if (!fs.existsSync(fixturesPath)) {
+    throw new Error(`Fixtures file not found: ${fixturesPath}`);
+  }
+  const fixturesRaw = fs.readFileSync(fixturesPath, "utf8");
+  const resolvedFixturesPath = path.resolve(fixturesPath);
+  const fixturesSpec = parseFixtures(
+    fixturesRaw,
+    path.relative(process.cwd(), resolvedFixturesPath),
+  );
+
+  const fixturesDir = path.dirname(resolvedFixturesPath);
+  const missingWasmPaths: string[] = [];
+  for (const contract of fixturesSpec.contracts) {
+    const resolvedWasmPath = path.resolve(fixturesDir, contract.wasm_path);
+    if (
+      !fs.existsSync(resolvedWasmPath) ||
+      !fs.statSync(resolvedWasmPath).isFile()
+    ) {
+      missingWasmPaths.push(contract.wasm_path);
+    }
+  }
+
+  if (missingWasmPaths.length > 0) {
+    throw new Error(`Missing WASM file(s): ${missingWasmPaths.join(", ")}`);
+  }
 }
 async function main() {
   let command: CliCommand;
@@ -305,10 +351,24 @@ async function main() {
     rpcUrl,
     jsonStdout,
     verbose,
+    dryRun,
     helperPath,
+    json,
     allowCrossTargetSubstitution,
     baseFixturesPath,
   } = command.options;
+
+  if (dryRun) {
+    try {
+      runDryRun(fixturesPath);
+      console.log("✔ Configuration and fixtures are valid");
+      return;
+    } catch (error: any) {
+      console.error(error?.message ?? String(error));
+      process.exit(1);
+    }
+  }
+
   const gitCommit = getGitCommit();
 
   // When stdout mode is requested, route diagnostic and progress logs to stderr.
@@ -341,7 +401,7 @@ async function main() {
       ...new Set(associations.flatMap((assoc) => assoc.versions)),
     ];
     sdkSummary = formatSdkVersions(versions);
-    for (const assoc of associations) {
+    for (const assoc of json ? [] : associations) {
       const relative = path.relative(process.cwd(), assoc.wasmPath);
       const lockHint = assoc.lockPath
         ? ` (lock: ${path.relative(process.cwd(), assoc.lockPath)})`
@@ -355,12 +415,10 @@ async function main() {
   }
 
   try {
-    console.log(`Fixtures: ${fixturesPath}`);
-    console.log(`Output:   ${jsonStdout ? "stdout" : outputPath}`);
-    console.log(`RPC URL:  ${sanitizeEndpoint(rpcUrl)}`);
-    console.log(`Commit:   ${gitCommit}`);
-    console.log(`SDK:      ${sdkSummary}`);
-    verboseLog(verbose, "Starting Weighin Benchmarking...");
+    verboseLog(
+      verbose && !json,
+      `Starting Weighin Benchmarking...\nFixtures: ${fixturesPath}\nOutput:   ${jsonStdout ? "stdout" : outputPath}\nRPC URL:  ${sanitizeEndpoint(rpcUrl)}\nCommit:   ${gitCommit}\nSDK:      ${sdkSummary}`,
+    );
 
     // Measure HEAD fixtures
     const headResults = await runMeasurement({
@@ -438,14 +496,16 @@ async function main() {
     const benchmarkLabel = totalBenchmarks === 1 ? "benchmark" : "benchmarks";
     const violationLabel = violationCount === 1 ? "violation" : "violations";
 
-    if (allPassed) {
-      console.log(
-        `✔ ${totalBenchmarks} ${benchmarkLabel} passed, 0 ${violationLabel}`,
-      );
-    } else {
-      console.log(
-        `✖ ${passedCount} ${benchmarkLabel} passed, ${violationCount} ${violationLabel} detected`,
-      );
+    if (!json) {
+      if (allPassed) {
+        console.log(
+          `✔ ${totalBenchmarks} ${benchmarkLabel} passed, 0 ${violationLabel}`,
+        );
+      } else {
+        console.log(
+          `✖ ${passedCount} ${benchmarkLabel} passed, ${violationCount} ${violationLabel} detected`,
+        );
+      }
     }
 
     // Write results file if not jsonStdout

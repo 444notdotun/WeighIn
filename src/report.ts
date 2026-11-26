@@ -130,6 +130,16 @@ export function writeReportFile(
   }
 }
 
+/**
+ * Machine-readable CLI output mode.
+ *
+ * When enabled, diagnostics are routed to stderr so stdout carries only the
+ * serialized JSON payload.
+ */
+export function jsonOutputEnabled(argv: readonly string[]): boolean {
+  return argv.includes("--json");
+}
+
 export function generateFailureReport(errorMessage: string): string {
   return [
     "# WeighIn Resource Benchmark: Unsuccessful Comparison",
